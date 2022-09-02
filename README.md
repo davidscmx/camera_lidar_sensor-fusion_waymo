@@ -129,5 +129,13 @@ Parts of this project are based on the following repositories:
 - [Complex-YOLO: Real-time 3D Object Detection on Point Clouds](https://github.com/maudzung/Complex-YOLOv4-Pytorch)
 
 
+## FAQ
+
+# What are "Range Images"?
+An alternative form of representing lidar scans are range images.
+
+This data structure holds 3d points as a 360 degree "photo" of the scanning environment with the row
+dimension denoting the elevation angle of the laser beam and the column dimension denoting the azimuth angle.
+
 ## License
 [License](LICENSE.md)

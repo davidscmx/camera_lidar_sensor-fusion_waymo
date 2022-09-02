@@ -30,6 +30,9 @@ sys.path.append(os.getcwd())
 from tools.waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
 from tools.waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileReader, dataset_pb2, label_pb2
 
+# Lidar tools
+from tools import lidar_tools
+
 ## 3d object detection
 import student.objdet_pcl as pcl
 import student.objdet_detect as det
@@ -118,8 +121,11 @@ while True:
         camera_name = dataset_pb2.CameraName.FRONT
         lidar_calibration = waymo_utils.get(frame.context.laser_calibrations, lidar_name)
         camera_calibration = waymo_utils.get(frame.context.camera_calibrations, camera_name)
-        if 'load_image' in exec_list:
-            image = tools.extract_front_camera_image(frame)
+
+        lidar_tools.print_range_image_shape(frame, lidar_name)
+
+        #if 'load_image' in exec_list:
+        #    image = tools.extract_front_camera_image(frame)
 
         ## Compute lidar point-cloud from range image
         #if 'pcl_from_rangeimage' in exec_list:
@@ -183,9 +189,9 @@ while True:
         #    cv2.imshow('range_image', img_range)
         #    cv2.waitKey(vis_pause_time)
 
-        if 'show_pcl' in exec_list:
-            print("show pcl")
-            pcl.show_pcl(lidar_pcl)
+        #if 'show_pcl' in exec_list:
+        #    print("show pcl")
+        #    pcl.show_pcl(lidar_pcl)
 
         #if 'show_bev' in exec_list:
         #    tools.show_bev(lidar_bev, configs_det)
