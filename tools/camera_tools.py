@@ -1,5 +1,6 @@
 from PIL import Image
 import cv2
+import io
 import numpy as np
 import zlib
 
@@ -8,7 +9,8 @@ from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2
 
 def display_image(frame):
     # load the camera data structure
-    camera_name = dataset_pb2.CameraName.FRONT
+    camera_name = dataset_pb2.CameraName.FRONT_LEFT
+
     image = [obj for obj in frame.images if obj.name == camera_name][0]
 
     # convert the actual image into rgb format

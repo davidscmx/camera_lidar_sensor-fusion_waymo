@@ -30,8 +30,9 @@ sys.path.append(os.getcwd())
 from tools.waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
 from tools.waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileReader, dataset_pb2, label_pb2
 
-# Lidar tools
+# Tools
 from tools import lidar_tools
+from tools import camera_tools
 
 ## 3d object detection
 import student.objdet_pcl as pcl
@@ -82,12 +83,23 @@ camera = None # init camera sensor object
 np.random.seed(10) # make random values predictable
 
 ## Selective execution and visualization
-exec_detection = [] # options are 'bev_from_pcl', 'detect_objects', 'validate_object_labels', 'measure_detection_performance'; options not in the list will be loaded from file
-exec_tracking = [] # options are 'perform_tracking'
-exec_visualization = ["pcl_from_rangeimage","show_pcl"] # options are 'show_range_image', 'show_bev', 'show_pcl', 'show_labels_in_image', 'show_objects_and_labels_in_bev', 'show_objects_in_bev_labels_in_camera', 'show_tracks', 'show_detection_performance', 'make_tracking_movie'
+# options are 'bev_from_pcl', 'detect_objects', 'validate_object_labels',
+# 'measure_detection_performance'; options not in the list will be loaded from file
+exec_detection = []
+# options are 'perform_tracking'
+exec_tracking = []
+# options are:
+# 'show_range_image', 'show_bev', 'show_pcl', 'show_labels_in_image', 'show_objects_and_labels_in_bev',
+# 'show_objects_in_bev_labels_in_camera', 'show_tracks', 'show_detection_performance', 'make_tracking_movie'
+exec_visualization = [
+    "show_camera_image",
+    #"pcl_from_rangeimage",
+    #"show_pcl",
+    "show_range_image"
+    ]
+# set pause time between frames in ms (0 = stop between frames until key is pressed)
 exec_list = make_exec_list(exec_detection, exec_tracking, exec_visualization)
-vis_pause_time = 0 # set pause time between frames in ms (0 = stop between frames until key is pressed)
-
+vis_pause_time = 0
 
 ##################
 ## Perform detection & tracking over all selected frames
@@ -122,10 +134,10 @@ while True:
         lidar_calibration = waymo_utils.get(frame.context.laser_calibrations, lidar_name)
         camera_calibration = waymo_utils.get(frame.context.camera_calibrations, camera_name)
 
-        lidar_tools.print_range_image_shape(frame, lidar_name)
+        if 'show_camera_image' in exec_list:
+            #image = tools.extract_front_camera_image(frame)
 
-        #if 'load_image' in exec_list:
-        #    image = tools.extract_front_camera_image(frame)
+            camera_tools.display_image(frame)
 
         ## Compute lidar point-cloud from range image
         #if 'pcl_from_rangeimage' in exec_list:
