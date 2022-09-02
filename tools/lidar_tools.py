@@ -21,6 +21,14 @@ def load_range_image(frame, lidar_name):
     return range_image
 
 def print_range_image_shape(frame, lidar_name):
-
     range_image = load_range_image(frame, lidar_name)
     print(range_image.shape)
+
+def print_pitch_resolution(frame, lidar_name):
+
+
+    load_range_image(frame, lidar_name)
+
+    # compute vertical field-of-view from lidar calibration
+    #print(range_image.shape)
+    # compute pitch resolution and convert it to angular minutes
