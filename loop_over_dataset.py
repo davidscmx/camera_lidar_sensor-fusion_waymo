@@ -22,6 +22,7 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 import copy
+from enum import Enum
 
 ## Add current working directory to path
 sys.path.append(os.getcwd())
@@ -33,6 +34,7 @@ from tools.waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileRea
 # Tools
 from tools import lidar_tools
 from tools import camera_tools
+from tools.types import RANGE_IMAGE_CELL
 
 ## 3d object detection
 import student.objdet_pcl as pcl
@@ -134,7 +136,8 @@ while True:
         lidar_calibration = waymo_utils.get(frame.context.laser_calibrations, lidar_name)
         camera_calibration = waymo_utils.get(frame.context.camera_calibrations, camera_name)
 
-        lidar_tools.print_pitch_resolution(frame, lidar_name)
+        lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.RANGE)
+        lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.INTENSITY)
 
         #if 'show_camera_image' in exec_list:
         #    #image = tools.extract_front_camera_image(frame)
