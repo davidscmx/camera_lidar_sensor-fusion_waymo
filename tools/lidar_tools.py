@@ -25,10 +25,14 @@ def print_range_image_shape(frame, lidar_name):
     print(range_image.shape)
 
 def print_pitch_resolution(frame, lidar_name):
-
-
-    load_range_image(frame, lidar_name)
-
+    range_image = load_range_image(frame, lidar_name)
     # compute vertical field-of-view from lidar calibration
-    #print(range_image.shape)
+    lidar_calibration = [obj for obj in frame.context.laser_calibrations if obj.name == lidar_name][0]
+    min_pitch = lidar_calibration.beam_inclination_min
+    max_pitch = lidar_calibration.beam_inclination_max
+    vertical_fov = max_pitch - min_pitch
+
     # compute pitch resolution and convert it to angular minutes
+    pitch_resolution_radians = vertical_fov / range_image.shape[0]
+    pitch_resolution_degrees = pitch_resolution_radians * (180/np.pi)
+    print("pitch angle resolution " + "{0:.2f}".format(pitch_resolution_degrees)+" degrees")

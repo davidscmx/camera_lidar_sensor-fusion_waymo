@@ -134,10 +134,11 @@ while True:
         lidar_calibration = waymo_utils.get(frame.context.laser_calibrations, lidar_name)
         camera_calibration = waymo_utils.get(frame.context.camera_calibrations, camera_name)
 
-        if 'show_camera_image' in exec_list:
-            #image = tools.extract_front_camera_image(frame)
+        lidar_tools.print_pitch_resolution(frame, lidar_name)
 
-            camera_tools.display_image(frame)
+        #if 'show_camera_image' in exec_list:
+        #    #image = tools.extract_front_camera_image(frame)
+        #    camera_tools.display_image(frame)
 
         ## Compute lidar point-cloud from range image
         #if 'pcl_from_rangeimage' in exec_list:
