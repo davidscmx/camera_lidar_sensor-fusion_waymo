@@ -136,9 +136,11 @@ while True:
         lidar_calibration = waymo_utils.get(frame.context.laser_calibrations, lidar_name)
         camera_calibration = waymo_utils.get(frame.context.camera_calibrations, camera_name)
 
-        lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.RANGE)
-        lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.INTENSITY)
+        #lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.RANGE)
+        #lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.INTENSITY)
 
+        print(lidar_tools.range_image_to_point_cloud(frame, lidar_name))
+        #print(lidar_tools.get_range_image_shape(frame, lidar_name))
         #if 'show_camera_image' in exec_list:
         #    #image = tools.extract_front_camera_image(frame)
         #    camera_tools.display_image(frame)
