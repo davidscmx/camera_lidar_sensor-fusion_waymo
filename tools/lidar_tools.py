@@ -86,25 +86,37 @@ def range_image_to_point_cloud(frame, lidar_name):
 
     lidar_calibration = [obj for obj in frame.context.laser_calibrations if obj.name == lidar_name][0]
 
-    # inclinations/pitches have to be reversed in order so that the
-    # first angle corresponds to the top-most measurement.
+    # Given in radians
     inclination_min = lidar_calibration.beam_inclination_min
     inclination_max = lidar_calibration.beam_inclination_max
 
-    # TODO: check -> Convert to angular minutes
-    inclinations = np.linspace(inclination_min, inclination_max, height)*60
-    inclinations = np.flip(inclinations)
+    # convert to degrees
+    inclinations = np.linspace(inclination_min, inclination_max, height)*(180/np.pi)
 
-    extrinsic_matrix = np.array(lidar_calibration.extrinsic.transform).reshape(4,4)
+    # inclinations/pitches have to be reversed in order so that the
+    # first angle corresponds to the top-most measurement.
+
+    inclinations = np.flip(inclinations)
 
     # Compute the α angle betweetn the x and y axis from the extrinsic calibration matrix
     #         [cosαcosβ ... ]
     # [R,t] = [sinαcosβ ... ]
     #         [-sinβ ...    ]
     width = img_range.shape[1]
-    azimuth_correction = math.atan2(extrinsic_matrix[1,0], extrinsic_matrix[0,0])
-    print(azimuth_correction)
-    azimuth = np.linspace(np.pi,-np.pi, width) - azimuth_correction
+    extrinsic_matrix = np.array(lidar_calibration.extrinsic.transform).reshape(4,4)
+
+    # In degrees
+    azimuth_correction = math.atan2(extrinsic_matrix[1,0], extrinsic_matrix[0,0])*(180/np.pi)
+
+    azimuth = (np.linspace(np.pi,-np.pi, width)*(180/np.pi)) - azimuth_correction
+
+    # expand inclination and azimuth such that every range image cell has its own appropiate value pair
+    # TODO. Review this
+    azimuth_tiled = np.broadcast(azimuth[np.newaxis, :], (height, width))
+    inclination_tiled = np.broadcast(inclinations[np.newaxis, :], (height, width))
 
 
-    print(azimuth)
+    # perform coordinate conversion
+    x = np.cos(azimuth) * np.cos(inclination) * ri_range
+    y = np.sin(azimuth) * np.cos(inclination) * ri_range
+    z = np.sin(inclination) * ri_range
