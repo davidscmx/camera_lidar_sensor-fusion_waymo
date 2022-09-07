@@ -153,4 +153,4 @@ Format of the lidar range frame:
 Resolution in the azimuth - 360 / 2650 0.1358 degrees * (60 angular minutes/ degree) ~ 8 angular minutes
 
 
-<img src="img/point_cloud_waymo.png"/>
+<img src="img/point_cloud_waymo.gif"/>
