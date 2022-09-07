@@ -6,15 +6,16 @@ In this project, measurements from LiDAR and camera of tracked vehicles are fuse
 
 <img src="img/img_title_1.jpeg"/>
 
+<img src="img/"/>
+
 The project consists of two major parts:
 1. **Object detection**: In this part, a deep-learning approach is used to detect vehicles in LiDAR data based on a birds-eye view perspective of the 3D point-cloud. Also, a series of performance measures is used to evaluate the performance of the detection approach.
+
 2. **Object tracking** : In this part, an extended Kalman filter is used to track vehicles over time, based on the lidar detections fused with camera detections. Data association and track management are implemented as well.
 
 The following diagram contains an outline of the data flow and of the individual steps that make up the algorithm.
 
 <img src="img/img_title_2_new.png"/>
-
-Also, the project code contains various tasks, which are detailed step-by-step in the code. More information on the algorithm and on the tasks can be found in the Udacity classroom.
 
 ## Project File Structure
 
@@ -58,7 +59,6 @@ Also, the project code contains various tasks, which are detailed step-by-step i
  ┃<br>
  ┣ basic_loop.py<br>
  ┣ loop_over_dataset.py<br>
-
 
 
 ## Installation Instructions for Running Locally
@@ -153,3 +153,4 @@ Format of the lidar range frame:
 Resolution in the azimuth - 360 / 2650 0.1358 degrees * (60 angular minutes/ degree) ~ 8 angular minutes
 
 
+<img src="img/point_cloud_waymo.png"/>

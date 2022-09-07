@@ -2,6 +2,7 @@
 import cv2
 from PIL import Image
 from enum import Enum
+import open3d
 import math
 import numpy as np
 import zlib
@@ -91,7 +92,7 @@ def range_image_to_point_cloud(frame, lidar_name):
     inclination_max = lidar_calibration.beam_inclination_max
 
     # convert to degrees
-    inclinations = np.linspace(inclination_min, inclination_max, height)*(180/np.pi)
+    inclinations = np.linspace(inclination_min, inclination_max, height)
 
     # inclinations/pitches have to be reversed in order so that the
     # first angle corresponds to the top-most measurement.
@@ -105,18 +106,32 @@ def range_image_to_point_cloud(frame, lidar_name):
     width = img_range.shape[1]
     extrinsic_matrix = np.array(lidar_calibration.extrinsic.transform).reshape(4,4)
 
-    # In degrees
-    azimuth_correction = math.atan2(extrinsic_matrix[1,0], extrinsic_matrix[0,0])*(180/np.pi)
-
-    azimuth = (np.linspace(np.pi,-np.pi, width)*(180/np.pi)) - azimuth_correction
+    azimuth_correction = math.atan2(extrinsic_matrix[1,0], extrinsic_matrix[0,0])
+    azimuth = np.linspace(np.pi,-np.pi, width) - azimuth_correction
 
     # expand inclination and azimuth such that every range image cell has its own appropiate value pair
-    # TODO. Review this
-    azimuth_tiled = np.broadcast(azimuth[np.newaxis, :], (height, width))
-    inclination_tiled = np.broadcast(inclinations[np.newaxis, :], (height, width))
-
+    azimuth_tiled = np.broadcast_to(azimuth[np.newaxis,:], (height,width))
+    inclination_tiled = np.broadcast_to(inclinations[:,np.newaxis],(height,width))
 
     # perform coordinate conversion
-    x = np.cos(azimuth) * np.cos(inclination) * ri_range
-    y = np.sin(azimuth) * np.cos(inclination) * ri_range
-    z = np.sin(inclination) * ri_range
+    x = np.cos(azimuth_tiled) * np.cos(inclination_tiled) * img_range
+    y = np.sin(azimuth_tiled) * np.cos(inclination_tiled) * img_range
+    z = np.sin(inclination_tiled) * img_range
+
+    # Convert from lidar coordinates to vehicles coordinates
+    xyz_sensor = np.stack([x,y,z,np.ones_like(z)])
+    xyz_vehicle = np.einsum('ij,jkl->ikl', extrinsic_matrix, xyz_sensor)
+    xyz_vehicle = xyz_vehicle.transpose(1,2,0)
+
+    # extract points with range > 0
+    idx_range = img_range > 0
+    pcl = xyz_vehicle[idx_range,:3]
+
+    # Visualize
+    pcl = xyz_vehicle[img_range > 0,:3]
+    pcd = open3d.geometry.PointCloud()
+    pcd.points = open3d.utility.Vector3dVector(pcl)
+    open3d.visualization.draw_geometries([pcd])
+
+    # stack lidar point intensity as last column
+    pcl_full = np.column_stack((pcl, ri[idx_range, 1]))
