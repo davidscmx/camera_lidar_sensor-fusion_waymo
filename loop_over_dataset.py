@@ -22,7 +22,10 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 import copy
+
 from enum import Enum
+from easydict import EasyDict as edict
+import open3d
 
 ## Add current working directory to path
 sys.path.append(os.getcwd())
@@ -51,6 +54,7 @@ from student.association import Association
 from student.measurements import Sensor, Measurement
 from misc.evaluation import plot_tracks, plot_rmse, make_movie
 import misc.params as params
+
 
 ##################
 ## Set parameters and perform initializations
@@ -113,6 +117,15 @@ np.random.seed(0) # make random values predictable
 if 'show_tracks' in exec_list:
     fig, (ax2, ax) = plt.subplots(1,2) # init track plot
 
+config = edict()
+config.lim_x = [0, 50]
+config.lim_y = [-25, 25]
+config.lim_z = [-1, 3]
+config.bev_width = 608
+config.bev_height = 608
+config.conf_thresh = 0.5
+config.model = 'darknet'
+
 while True:
     try:
         ## Get next frame from Waymo dataset
@@ -139,7 +152,13 @@ while True:
         #lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.RANGE)
         #lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.INTENSITY)
 
-        print(lidar_tools.range_image_to_point_cloud(frame, lidar_name))
+        pcl = lidar_tools.range_image_to_point_cloud(frame, lidar_name, vis=False)
+        cropped_pcl = lidar_tools.crop_point_cloud(pcl, config, vis=False)
+
+        pcd = open3d.geometry.PointCloud()
+        pcd.points = open3d.utility.Vector3dVector(cropped_pcl)
+        open3d.visualization.draw_geometries([pcd])
+
         #print(lidar_tools.get_range_image_shape(frame, lidar_name))
         #if 'show_camera_image' in exec_list:
         #    #image = tools.extract_front_camera_image(frame)

@@ -77,7 +77,7 @@ def visualize_selected_channel(frame, lidar_name, channel):
     cv2.waitKey(0)
 
 
-def range_image_to_point_cloud(frame, lidar_name):
+def range_image_to_point_cloud(frame, lidar_name, vis=True):
 
     range_image = load_range_image(frame, lidar_name)
     range_image[range_image<0]=0.0
@@ -126,12 +126,35 @@ def range_image_to_point_cloud(frame, lidar_name):
     # extract points with range > 0
     idx_range = img_range > 0
     pcl = xyz_vehicle[idx_range,:3]
+    pcl = xyz_vehicle[img_range > 0,:3]
 
     # Visualize
-    pcl = xyz_vehicle[img_range > 0,:3]
-    pcd = open3d.geometry.PointCloud()
-    pcd.points = open3d.utility.Vector3dVector(pcl)
-    open3d.visualization.draw_geometries([pcd])
+    if vis:
+        pcd = open3d.geometry.PointCloud()
+        pcd.points = open3d.utility.Vector3dVector(pcl)
+        open3d.visualization.draw_geometries([pcd])
 
     # stack lidar point intensity as last column
-    pcl_full = np.column_stack((pcl, ri[idx_range, 1]))
+    pcl_full = np.column_stack((pcl, range_image[idx_range, 1]))
+
+    return pcl
+
+def crop_point_cloud(lidar_pcl, config, vis=True):
+
+    lim_x = config.lim_x
+    lim_y = config.lim_y
+    lim_z = config.lim_z
+
+    mask = np.where((lidar_pcl[:, 0] >= lim_x[0]) & (lidar_pcl[:, 0] <= lim_x[1]) &
+                    (lidar_pcl[:, 1] >= lim_y[0]) & (lidar_pcl[:, 1] <= lim_y[1]) &
+                    (lidar_pcl[:, 2] >= lim_z[0]) & (lidar_pcl[:, 2] <= lim_z[1]))
+
+    lidar_pcl = lidar_pcl[mask]
+
+    # visualize point-cloud
+    if vis:
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(lidar_pcl)
+        o3d.visualization.draw_geometries([pcd])
+
+    return lidar_pcl
