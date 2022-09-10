@@ -149,107 +149,97 @@ while True:
         lidar_calibration = waymo_utils.get(frame.context.laser_calibrations, lidar_name)
         camera_calibration = waymo_utils.get(frame.context.camera_calibrations, camera_name)
 
-        #lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.RANGE)
-        #lidar_tools.visualize_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL.INTENSITY)
-
         pcl = lidar_tools.range_image_to_point_cloud(frame, lidar_name, vis=False)
         cropped_pcl = lidar_tools.crop_point_cloud(pcl, config, vis=False)
 
+        pcl_bev = lidar_tools.pcl_to_bev(cropped_pcl, config, vis=True)
 
-        lidar_tools.pcl_to_bev(cropped_pcl, config, vis=True)
 
-        #pcd = open3d.geometry.PointCloud()
-        #pcd.points = open3d.utility.Vector3dVector(cropped_pcl)
-        #open3d.visualization.draw_geometries([pcd])
-
-        #print(lidar_tools.get_range_image_shape(frame, lidar_name))
-        #if 'show_camera_image' in exec_list:
-        #    #image = tools.extract_front_camera_image(frame)
-        #    camera_tools.display_image(frame)
+        if 'show_camera_image' in exec_list:
+            image = tools.extract_front_camera_image(frame)
+            camera_tools.display_image(frame)
 
         ## Compute lidar point-cloud from range image
-        #if 'pcl_from_rangeimage' in exec_list:
-        #    print('computing point-cloud from lidar range image')
-        #    lidar_pcl = tools.pcl_from_range_image(frame, lidar_name)
-        #else:
-        #    print('loading lidar point-cloud from result file')
-        #    lidar_pcl = load_object_from_file(results_fullpath, data_filename, 'lidar_pcl', cnt_frame)
+        if 'pcl_from_rangeimage' in exec_list:
+            print('computing point-cloud from lidar range image')
+            lidar_pcl = tools.pcl_from_range_image(frame, lidar_name)
+        else:
+            print('loading lidar point-cloud from result file')
+            lidar_pcl = load_object_from_file(results_fullpath, data_filename, 'lidar_pcl', cnt_frame)
 #
         ### Compute lidar birds-eye view (bev)
-        #if 'bev_from_pcl' in exec_list:
-        #    print('computing birds-eye view from lidar pointcloud')
-        #    lidar_bev = pcl.bev_from_pcl(lidar_pcl, configs_det)
-        #else:
-        #    print('loading birds-eve view from result file')
-        #    lidar_bev = load_object_from_file(results_fullpath, data_filename, 'lidar_bev', cnt_frame)
+        if 'bev_from_pcl' in exec_list:
+            print('computing birds-eye view from lidar pointcloud')
+            lidar_bev = pcl.bev_from_pcl(lidar_pcl, configs_det)
+        else:
+            print('loading birds-eve view from result file')
+            lidar_bev = load_object_from_file(results_fullpath, data_filename, 'lidar_bev', cnt_frame)
 #
         ### 3D object detection
-        #if (configs_det.use_labels_as_objects==True):
-        #    print('using groundtruth labels as objects')
-        #    detections = tools.convert_labels_into_objects(frame.laser_labels, configs_det)
-        #else:
-        #    if 'detect_objects' in exec_list:
-        #        print('detecting objects in lidar pointcloud')
-        #        detections = det.detect_objects(lidar_bev, model_det, configs_det)
-        #    else:
-        #        print('loading detected objects from result file')
-        #        # load different data for final project vs. mid-term project
-        #        if 'perform_tracking' in exec_list:
-        #            detections = load_object_from_file(results_fullpath, data_filename, 'detections', cnt_frame)
-        #        else:
-        #            detections = load_object_from_file(results_fullpath, data_filename, 'detections_' + configs_det.arch + '_' + str(configs_det.conf_thresh), cnt_frame)
+        if (configs_det.use_labels_as_objects==True):
+            print('using groundtruth labels as objects')
+            detections = tools.convert_labels_into_objects(frame.laser_labels, configs_det)
+        else:
+            if 'detect_objects' in exec_list:
+                print('detecting objects in lidar pointcloud')
+                detections = det.detect_objects(lidar_bev, model_det, configs_det)
+            else:
+                print('loading detected objects from result file')
+                # load different data for final project vs. mid-term project
+                if 'perform_tracking' in exec_list:
+                    detections = load_object_from_file(results_fullpath, data_filename, 'detections', cnt_frame)
+                else:
+                    detections = load_object_from_file(results_fullpath, data_filename, 'detections_' + configs_det.arch + '_' + str(configs_det.conf_thresh), cnt_frame)
 #
         ### Validate object labels
-        #if 'validate_object_labels' in exec_list:
-        #    print("validating object labels")
-        #    valid_label_flags = tools.validate_object_labels(frame.laser_labels, lidar_pcl, configs_det, 0 if configs_det.use_labels_as_objects==True else 10)
-        #else:
-        #    print('loading object labels and validation from result file')
-        #    valid_label_flags = load_object_from_file(results_fullpath, data_filename, 'valid_labels', cnt_frame)
+        if 'validate_object_labels' in exec_list:
+            print("validating object labels")
+            valid_label_flags = tools.validate_object_labels(frame.laser_labels, lidar_pcl, configs_det, 0 if configs_det.use_labels_as_objects==True else 10)
+        else:
+            print('loading object labels and validation from result file')
+            valid_label_flags = load_object_from_file(results_fullpath, data_filename, 'valid_labels', cnt_frame)
 #
         ### Performance evaluation for object detection
-        #if 'measure_detection_performance' in exec_list:
-        #    print('measuring detection performance')
-        #    det_performance = eval.measure_detection_performance(detections, frame.laser_labels, valid_label_flags, configs_det.min_iou)
-        #else:
-        #    print('loading detection performance measures from file')
-        #    # load different data for final project vs. mid-term project
-        #    if 'perform_tracking' in exec_list:
-        #        det_performance = load_object_from_file(results_fullpath, data_filename, 'det_performance', cnt_frame)
-        #    else:
-        #        det_performance = load_object_from_file(results_fullpath, data_filename, 'det_performance_' + configs_det.arch + '_' + str(configs_det.conf_thresh), cnt_frame)
-#
-        #det_performance_all.append(det_performance) # store all evaluation results in a list for performance assessment at the end
-#
-#
+        if 'measure_detection_performance' in exec_list:
+            print('measuring detection performance')
+            det_performance = eval.measure_detection_performance(detections, frame.laser_labels, valid_label_flags, configs_det.min_iou)
+        else:
+            print('loading detection performance measures from file')
+            # load different data for final project vs. mid-term project
+            if 'perform_tracking' in exec_list:
+                det_performance = load_object_from_file(results_fullpath, data_filename, 'det_performance', cnt_frame)
+            else:
+                det_performance = load_object_from_file(results_fullpath, data_filename, 'det_performance_' + configs_det.arch + '_' + str(configs_det.conf_thresh), cnt_frame)
+
+        det_performance_all.append(det_performance) # store all evaluation results in a list for performance assessment at the end
+
         ### Visualization for object detection
-        #if 'show_range_image' in exec_list:
-        #    img_range = pcl.show_range_image(frame, lidar_name)
-        #    img_range = img_range.astype(np.uint8)
-        #    cv2.imshow('range_image', img_range)
-        #    cv2.waitKey(vis_pause_time)
+        if 'show_range_image' in exec_list:
+            img_range = pcl.show_range_image(frame, lidar_name)
+            img_range = img_range.astype(np.uint8)
+            cv2.imshow('range_image', img_range)
+            cv2.waitKey(vis_pause_time)
 
-        #if 'show_pcl' in exec_list:
-        #    print("show pcl")
-        #    pcl.show_pcl(lidar_pcl)
+        if 'show_pcl' in exec_list:
+            print("show pcl")
+            pcl.show_pcl(lidar_pcl)
 
-        #if 'show_bev' in exec_list:
-        #    tools.show_bev(lidar_bev, configs_det)
-        #    cv2.waitKey(vis_pause_time)
-#
-        #if 'show_labels_in_image' in exec_list:
-        #    img_labels = tools.project_labels_into_camera(camera_calibration, image, frame.laser_labels, valid_label_flags, 0.5)
-        #    cv2.imshow('img_labels', img_labels)
-        #    cv2.waitKey(vis_pause_time)
-#
-        #if 'show_objects_and_labels_in_bev' in exec_list:
-        #    tools.show_objects_labels_in_bev(detections, frame.laser_labels, lidar_bev, configs_det)
-        #    cv2.waitKey(vis_pause_time)
-#
-        #if 'show_objects_in_bev_labels_in_camera' in exec_list:
-        #    tools.show_objects_in_bev_labels_in_camera(detections, lidar_bev, image, frame.laser_labels, valid_label_flags, camera_calibration, configs_det)
-        #    cv2.waitKey(vis_pause_time)
+        if 'show_bev' in exec_list:
+            tools.show_bev(lidar_bev, configs_det)
+            cv2.waitKey(vis_pause_time)
 
+        if 'show_labels_in_image' in exec_list:
+            img_labels = tools.project_labels_into_camera(camera_calibration, image, frame.laser_labels, valid_label_flags, 0.5)
+            cv2.imshow('img_labels', img_labels)
+            cv2.waitKey(vis_pause_time)
+
+        if 'show_objects_and_labels_in_bev' in exec_list:
+            tools.show_objects_labels_in_bev(detections, frame.laser_labels, lidar_bev, configs_det)
+            cv2.waitKey(vis_pause_time)
+
+        if 'show_objects_in_bev_labels_in_camera' in exec_list:
+            tools.show_objects_in_bev_labels_in_camera(detections, lidar_bev, image, frame.laser_labels, valid_label_flags, camera_calibration, configs_det)
+            cv2.waitKey(vis_pause_time)
 
         #################################
         ## Perform tracking
@@ -316,7 +306,6 @@ while True:
         # if StopIteration is raised, break from loop
         print("StopIteration has been raised\n")
         break
-
 
 #################################
 ## Post-processing
