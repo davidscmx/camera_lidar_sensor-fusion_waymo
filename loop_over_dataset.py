@@ -155,9 +155,12 @@ while True:
         pcl = lidar_tools.range_image_to_point_cloud(frame, lidar_name, vis=False)
         cropped_pcl = lidar_tools.crop_point_cloud(pcl, config, vis=False)
 
-        pcd = open3d.geometry.PointCloud()
-        pcd.points = open3d.utility.Vector3dVector(cropped_pcl)
-        open3d.visualization.draw_geometries([pcd])
+
+        lidar_tools.pcl_to_bev(cropped_pcl, config, vis=True)
+
+        #pcd = open3d.geometry.PointCloud()
+        #pcd.points = open3d.utility.Vector3dVector(cropped_pcl)
+        #open3d.visualization.draw_geometries([pcd])
 
         #print(lidar_tools.get_range_image_shape(frame, lidar_name))
         #if 'show_camera_image' in exec_list:
