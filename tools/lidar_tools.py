@@ -187,9 +187,8 @@ def pcl_to_bev(lidar_pcl, configs, vis=True):
     # make sure that each entry is normalized on the difference between the upper and lower height defined in the config file
     height_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
     height_map[np.int_(lidar_pcl_hei[:, 0]), np.int_(lidar_pcl_hei[:, 1])] = lidar_pcl_hei[:, 2] / float(np.abs(configs.lim_z[1] - configs.lim_z[0]))
-    print(height_map)
+
     # sort points such that in case of identical BEV grid coordinates, the points in each grid cell are arranged based on their intensity
-    print(lidar_pcl_cpy.shape)
     lidar_pcl_cpy[lidar_pcl_cpy[:,3]>1.0,3] = 1.0
     idx_intensity = np.lexsort((-lidar_pcl_cpy[:, 3], lidar_pcl_cpy[:, 1], lidar_pcl_cpy[:, 0]))
     lidar_pcl_cpy = lidar_pcl_cpy[idx_intensity]
@@ -212,3 +211,10 @@ def pcl_to_bev(lidar_pcl, configs, vis=True):
                 break
         cv2.destroyAllWindows()
 
+def render_obj_over_bev(detections, lidar_bev_labels, config, vis=True):
+    tools.project_detections_into_bev(lidar_bev_labels, detections, config, [0,0,255])
+
+    if vis==True:
+        lidar_bev_labels = cv2.rotate(lidar_bev_labels, cv2.ROTATE_180)
+        cv2.imshow("BEV map", lidar_bev_labels)
+        cv2.waitKey(0)

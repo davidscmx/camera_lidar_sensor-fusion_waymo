@@ -66,7 +66,8 @@ data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segmen
 show_only_frames = [0, 10] # show only frames in interval for debugging
 
 ## Prepare Waymo Open Dataset file for loading
-data_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset', data_filename) # adjustable path in case this script is called from another working directory
+# adjustable path in case this script is called from another working directory
+data_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset', data_filename)
 results_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'results')
 datafile = WaymoDataFileReader(data_fullpath)
 datafile_iter = iter(datafile)  # initialize dataset iterator
@@ -91,17 +92,19 @@ np.random.seed(10) # make random values predictable
 ## Selective execution and visualization
 # options are 'bev_from_pcl', 'detect_objects', 'validate_object_labels',
 # 'measure_detection_performance'; options not in the list will be loaded from file
-exec_detection = []
+exec_detection = ["bev_from_pcl"]
 # options are 'perform_tracking'
-exec_tracking = []
+exec_tracking = [
+    "show_objects_and_labels_in_bev"
+]
 # options are:
 # 'show_range_image', 'show_bev', 'show_pcl', 'show_labels_in_image', 'show_objects_and_labels_in_bev',
 # 'show_objects_in_bev_labels_in_camera', 'show_tracks', 'show_detection_performance', 'make_tracking_movie'
 exec_visualization = [
     "show_camera_image",
-    #"pcl_from_rangeimage",
+    "pcl_from_rangeimage",
     #"show_pcl",
-    "show_range_image"
+    #"show_range_image"
     ]
 # set pause time between frames in ms (0 = stop between frames until key is pressed)
 exec_list = make_exec_list(exec_detection, exec_tracking, exec_visualization)
@@ -151,9 +154,6 @@ while True:
 
         pcl = lidar_tools.range_image_to_point_cloud(frame, lidar_name, vis=False)
         cropped_pcl = lidar_tools.crop_point_cloud(pcl, config, vis=False)
-
-        pcl_bev = lidar_tools.pcl_to_bev(cropped_pcl, config, vis=True)
-
 
         if 'show_camera_image' in exec_list:
             image = tools.extract_front_camera_image(frame)
