@@ -149,7 +149,7 @@ def display_laser_on_image(img, pcl, vehicle_to_image):
     pcl1 = np.concatenate((pcl,np.ones_like(pcl[:,0:1])),axis=1)
 
     # Transform the point cloud to image space.
-    proj_pcl = np.einsum('ij,bj->bi', vehicle_to_image, pcl1) 
+    proj_pcl = np.einsum('ij,bj->bi', vehicle_to_image, pcl1)
 
     # Filter LIDAR points which are behind the camera.
     mask = proj_pcl[:,2] > 0
@@ -179,7 +179,8 @@ def pcl_from_range_image(frame, lidar_name):
 
     # extract lidar data and range image
     lidar = waymo_utils.get(frame.lasers, lidar_name)
-    range_image, camera_projection, range_image_pose = waymo_utils.parse_range_image_and_camera_projection(lidar)    # Parse the top laser range image and get the associated projection.
+    # Parse the top laser range image and get the associated projection.
+    range_image, camera_projection, range_image_pose = waymo_utils.parse_range_image_and_camera_projection(lidar)
 
     # Convert the range image to a point cloud
     lidar_calib = waymo_utils.get(frame.context.laser_calibrations, lidar_name)
@@ -213,20 +214,20 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
         # draw object bounding box into birds-eye view
         if not color:
             color = configs.obj_colors[int(_id)]
-        
+
         # get object corners within bev image
         bev_corners = np.zeros((4, 2), dtype=np.float32)
         cos_yaw = np.cos(yaw)
         sin_yaw = np.sin(yaw)
         bev_corners[0, 0] = x - w / 2 * cos_yaw - l / 2 * sin_yaw # front left
-        bev_corners[0, 1] = y - w / 2 * sin_yaw + l / 2 * cos_yaw 
+        bev_corners[0, 1] = y - w / 2 * sin_yaw + l / 2 * cos_yaw
         bev_corners[1, 0] = x - w / 2 * cos_yaw + l / 2 * sin_yaw # rear left
         bev_corners[1, 1] = y - w / 2 * sin_yaw - l / 2 * cos_yaw
         bev_corners[2, 0] = x + w / 2 * cos_yaw + l / 2 * sin_yaw # rear right
         bev_corners[2, 1] = y + w / 2 * sin_yaw - l / 2 * cos_yaw
         bev_corners[3, 0] = x + w / 2 * cos_yaw - l / 2 * sin_yaw # front right
         bev_corners[3, 1] = y + w / 2 * sin_yaw + l / 2 * cos_yaw
-        
+
         # draw object as box
         corners_int = bev_corners.reshape(-1, 1, 2).astype(int)
         cv2.polylines(bev_map, [corners_int], True, color, 2)
@@ -234,8 +235,6 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
         # draw colored line to identify object front
         corners_int = bev_corners.reshape(-1, 2)
         cv2.line(bev_map, (corners_int[0, 0], corners_int[0, 1]), (corners_int[3, 0], corners_int[3, 1]), (255, 255, 0), 2)
-
-
 
 
 ##################
@@ -251,8 +250,8 @@ def validate_object_labels(object_labels, pcl, configs, min_num_points):
     vehicle_to_labels = [np.linalg.inv(waymo_utils.get_box_transformation_matrix(label.box)) for label in object_labels] # for each label, compute transformation matrix from vehicle space to box space
     vehicle_to_labels = np.stack(vehicle_to_labels)
 
-    pcl_no_int = pcl[:, :3] # strip away intensity information from point cloud 
-    pcl1 = np.concatenate((pcl_no_int, np.ones_like(pcl_no_int[:, 0:1])), axis=1) # convert pointcloud to homogeneous coordinates    
+    pcl_no_int = pcl[:, :3] # strip away intensity information from point cloud
+    pcl1 = np.concatenate((pcl_no_int, np.ones_like(pcl_no_int[:, 0:1])), axis=1) # convert pointcloud to homogeneous coordinates
     proj_pcl = np.einsum('lij,bj->lbi', vehicle_to_labels, pcl1) # transform point cloud to label space for each label (proj_pcl shape is [label, LIDAR point, coordinates])
     mask = np.logical_and.reduce(np.logical_and(proj_pcl >= -1, proj_pcl <= 1), axis=2) # for each pair of LIDAR point & label, check if point is inside the label's box (mask shape is [label, LIDAR point])
 
@@ -265,19 +264,19 @@ def validate_object_labels(object_labels, pcl, configs, min_num_points):
         ## ... outside the object detection range
         label_obj = [label.type, label.box.center_x, label.box.center_y, label.box.center_z,
                      label.box.height, label.box.width, label.box.length, label.box.heading]
-        valid_flags[index] = valid_flags[index] and is_label_inside_detection_area(label_obj, configs)                     
+        valid_flags[index] = valid_flags[index] and is_label_inside_detection_area(label_obj, configs)
 
-        ## ... flagged as "difficult to detect" or not of type "vehicle" 
+        ## ... flagged as "difficult to detect" or not of type "vehicle"
         if(label.detection_difficulty_level > 0 or label.type != label_pb2.Label.Type.TYPE_VEHICLE):
             valid_flags[index] = False
-        
-    
+
+
     return valid_flags
 
 
 # convert ground truth labels into 3D objects
 def convert_labels_into_objects(object_labels, configs):
-    
+
     detections = []
     for label in object_labels:
         # transform label into a candidate object
@@ -285,7 +284,7 @@ def convert_labels_into_objects(object_labels, configs):
             candidate = [label.type, label.box.center_x, label.box.center_y, label.box.center_z,
                          label.box.height, label.box.width, label.box.length, label.box.heading]
 
-            # only add to object list if candidate is within detection area    
+            # only add to object list if candidate is within detection area
             if(is_label_inside_detection_area(candidate, configs)):
                 detections.append(candidate)
 
@@ -296,7 +295,7 @@ def convert_labels_into_objects(object_labels, configs):
 def compute_box_corners(x,y,w,l,yaw):
     cos_yaw = np.cos(yaw)
     sin_yaw = np.sin(yaw)
-    
+
     fl = (x - w / 2 * cos_yaw - l / 2 * sin_yaw,  # front left
           y - w / 2 * sin_yaw + l / 2 * cos_yaw)
 
@@ -318,7 +317,7 @@ def is_label_inside_detection_area(label, configs, min_overlap=0.5):
     # convert current label object into Polygon object
     _, x, y, _, _, w, l, yaw = label
     label_obj_corners = compute_box_corners(x,y,w,l,yaw)
-    label_obj_poly = Polygon(label_obj_corners)   
+    label_obj_poly = Polygon(label_obj_corners)
 
     # convert detection are into polygon
     da_w = (configs.lim_x[1] - configs.lim_x[0])  # width
@@ -326,7 +325,7 @@ def is_label_inside_detection_area(label, configs, min_overlap=0.5):
     da_x = configs.lim_x[0] + da_w/2  # center in x
     da_y = configs.lim_y[0] + da_l/2  # center in y
     da_corners = compute_box_corners(da_x,da_y,da_w,da_l,0)
-    da_poly = Polygon(da_corners)   
+    da_poly = Polygon(da_corners)
 
     # check if detection area contains label object
     intersection = da_poly.intersection(label_obj_poly)
@@ -366,11 +365,11 @@ def show_objects_labels_in_bev(detections, object_labels, bev_maps, configs):
     # project detections and labels into birds-eye view
     bev_map = (bev_maps.squeeze().permute(1, 2, 0).numpy() * 255).astype(np.uint8)
     bev_map = cv2.resize(bev_map, (configs.bev_width, configs.bev_height))
-    
+
     label_detections = convert_labels_into_objects(object_labels, configs)
     project_detections_into_bev(bev_map, label_detections, configs, [0,255,0])
     project_detections_into_bev(bev_map, detections, configs, [0,0,255])
-    
+
 
     bev_map = cv2.rotate(bev_map, cv2.ROTATE_180)
     cv2.imshow('labels (green) vs. detected objects (red)', bev_map)

@@ -1,6 +1,6 @@
 from enum import Enum
 
-class RANGE_IMAGE_CELL(Enum):
+class RANGE_IMAGE_CELL_CHANNELS(Enum):
     RANGE = 0
     INTENSITY = 1
     ELONGATION = 2

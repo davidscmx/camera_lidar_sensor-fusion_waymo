@@ -10,7 +10,8 @@ import zlib
 
 ## Waymo open dataset reader
 from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2
-from .types import RANGE_IMAGE_CELL
+from .types import RANGE_IMAGE_CELL_CHANNELS
+#from ..misc.objdet_tools import
 
 def load_range_image(frame, lidar_name):
     # get laser data structure from frame
@@ -140,8 +141,7 @@ def range_image_to_point_cloud(frame, lidar_name, vis=True):
 
     return pcl_full
 
-def crop_point_cloud(lidar_pcl, config, vis=True):
-
+def crop_point_cloud(lidar_pcl, config):
     lim_x = config.lim_x
     lim_y = config.lim_y
     lim_z = config.lim_z
@@ -151,12 +151,6 @@ def crop_point_cloud(lidar_pcl, config, vis=True):
                     (lidar_pcl[:, 2] >= lim_z[0]) & (lidar_pcl[:, 2] <= lim_z[1]))
 
     lidar_pcl = lidar_pcl[mask]
-
-    # visualize point-cloud
-    if vis:
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(lidar_pcl)
-        o3d.visualization.draw_geometries([pcd])
 
     return lidar_pcl
 
@@ -214,6 +208,46 @@ def pcl_to_bev(lidar_pcl, configs, vis=True):
 def render_obj_over_bev(detections, lidar_bev_labels, config, vis=True):
     tools.project_detections_into_bev(lidar_bev_labels, detections, config, [0,0,255])
 
+    if vis==True:
+        lidar_bev_labels = cv2.rotate(lidar_bev_labels, cv2.ROTATE_180)
+        cv2.imshow("BEV map", lidar_bev_labels)
+        cv2.waitKey(0)
+
+
+def compute_precision_recall(det_performance_all, conf_thresh=0.5):
+
+    if len(det_performance_all)==0 :
+        print("no detections for conf_thresh = " + str(conf_thresh))
+        return
+
+    # extract the total number of positives, true positives, false negatives and false positives
+    # format of det_performance_all is [ious, center_devs, pos_negs]
+    pos_negs = []
+    for item in det_performance_all:
+        pos_negs.append(item[2])
+    pos_negs_arr = np.asarray(pos_negs)
+
+    positives = sum(pos_negs_arr[:,0])
+    true_positives = sum(pos_negs_arr[:,1])
+    false_negatives = sum(pos_negs_arr[:,2])
+    false_positives = sum(pos_negs_arr[:,3])
+    print("TP = " + str(true_positives) + ", FP = " + str(false_positives) + ", FN = " + str(false_negatives))
+
+    # compute precision
+    precision = true_positives / (true_positives + false_positives) # When an object is detected, what are the chances of it being real?
+
+    # compute recall
+    recall = true_positives / (true_positives + false_negatives) # What are the chances of a real object being detected?
+
+    print("precision = " + str(precision) + ", recall = " + str(recall) + ", conf_thres = " + str(conf_thresh) + "\n")
+
+
+def render_obj_over_bev(detections, lidar_bev_labels, configs, vis=False):
+
+    # project detected objects into bird's eye view
+    tools.project_detections_into_bev(lidar_bev_labels, detections, configs, [0,0,255])
+
+    # display bev map
     if vis==True:
         lidar_bev_labels = cv2.rotate(lidar_bev_labels, cv2.ROTATE_180)
         cv2.imshow("BEV map", lidar_bev_labels)

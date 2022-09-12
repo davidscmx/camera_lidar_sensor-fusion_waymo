@@ -17,6 +17,9 @@ import torch
 # add project directory to python path to enable relative imports
 import os
 import sys
+from enum import Enum
+import zlib
+
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
@@ -28,61 +31,98 @@ from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2, lab
 # object detection tools and helper functions
 import misc.objdet_tools as tools
 
+class RANGE_IMAGE_CELL_CHANNELS(Enum):
+    RANGE = 0
+    INTENSITY = 1
+    ELONGATION = 2
+    IS_IN_NO_LABEL_ZONE = 3
+
 # visualize lidar point-cloud
 def show_pcl(pcl):
 
-    #TODO
-    ####### ID_S1_EX2 START #######
-    #######
     print("student task ID_S1_EX2")
-
     # step 1 : initialize open3d with key callback and create window
-
+    vis = open3d.visualization.VisualizerWithKeyCallback()
+    vis.create_window()
     # step 2 : create instance of open3d point-cloud class
-
+    pcd = open3d.geometry.PointCloud()
     # step 3 : set points in pcd instance by converting the point-cloud into 3d vectors (using open3d function Vector3dVector)
-
+    pcd.points = open3d.utility.Vector3dVector(pcl)
     # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
-
+    vis.add_geometry(pcd)
     # step 5 : visualize point cloud and keep window open until right-arrow is pressed (key-code 262)
 
     #######
     ####### ID_S1_EX2 END #######
 
+def crop_channel_azimuth(img_channel, division_factor):
+    opening_angle = int(img_channel.shape[1] / division_factor)
+    img_channel_center = int(img_channel.shape[1] / 2)
+    img_channel = img_channel[:, img_channel_center - opening_angle : img_channel_center + opening_angle]
+    return img_channel
+
 # visualize range image
+def load_range_image(frame, lidar_name):
+    # get laser data structure from frame
+    lidar = [obj for obj in frame.lasers if obj.name == lidar_name][0]
+    range_image = []
+    # use first response
+    if len(lidar.ri_return1.range_image_compressed) > 0:
+        range_image = dataset_pb2.MatrixFloat()
+        range_image.ParseFromString(zlib.decompress(lidar.ri_return1.range_image_compressed))
+        range_image = np.array(range_image.data).reshape(range_image.shape.dims)
+
+    return range_image
+
+def contrast_adjustment(img):
+    return np.amax(img)/2 * img * 255 / (np.amax(img) - np.amin(img))
+
+def map_to_8bit(range_image, channel):
+    img_channel = range_image[:,:,channel]
+
+    if channel == RANGE_IMAGE_CELL_CHANNELS.RANGE.value:
+        img_channel = img_channel * 255 / (np.amax(img_channel) - np.amin(img_channel))
+    elif channel == RANGE_IMAGE_CELL_CHANNELS.INTENSITY.value:
+        img_channel = contrast_adjustment(img_channel)
+
+    img_channel = img_channel.astype(np.uint8)
+    return img_channel
+
+def get_selected_channel(frame, lidar_name, channel):
+    range_image = load_range_image(frame, lidar_name)
+    range_image[range_image<0] = 0.0
+
+    img_selected = map_to_8bit(range_image, channel = channel.value)
+    img_selected = crop_channel_azimuth(img_selected, division_factor=8)
+    return img_selected
+
 def show_range_image(frame, lidar_name):
 
-    #TODO
     ####### ID_S1_EX1 START #######
     print("student task ID_S1_EX1")
-
-    # step 1 : extract lidar data and range image for the roof-mounted lidar
-
-    # step 2 : extract the range and the intensity channel from the range image
-
-    # step 3 : set values <0 to zero
-
-    # step 4 : map the range channel onto an 8-bit scale and make sure that the full range of values is appropriately considered
-
-    # step 5 : map the intensity channel onto an 8-bit scale and normalize with the difference between the 1- and 99-percentile to mitigate the influence of outliers
-
-    # step 6 : stack the range and intensity image vertically using np.vstack and convert the result to an unsigned 8-bit integer
-
-    img_range_intensity = [] # remove after implementing all steps
-    #######
-    ####### ID_S1_EX1 END #######
-
+    img_channel_range = get_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL_CHANNELS.RANGE)
+    img_channel_intensity = get_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL_CHANNELS.INTENSITY)
+    img_range_intensity = np.vstack([img_channel_range, img_channel_intensity])
     return img_range_intensity
+
+def crop_point_cloud(lidar_pcl, config):
+    lim_x = config.lim_x
+    lim_y = config.lim_y
+    lim_z = config.lim_z
+
+    mask = np.where((lidar_pcl[:, 0] >= lim_x[0]) & (lidar_pcl[:, 0] <= lim_x[1]) &
+                    (lidar_pcl[:, 1] >= lim_y[0]) & (lidar_pcl[:, 1] <= lim_y[1]) &
+                    (lidar_pcl[:, 2] >= lim_z[0]) & (lidar_pcl[:, 2] <= lim_z[1]))
+
+    lidar_pcl = lidar_pcl[mask]
+
+    return lidar_pcl
 
 # create birds-eye view of lidar data
 def bev_from_pcl(lidar_pcl, configs):
 
     # remove lidar points outside detection area and with too low reflectivity
-    mask = np.where((lidar_pcl[:, 0] >= configs.lim_x[0]) & (lidar_pcl[:, 0] <= configs.lim_x[1]) &
-                    (lidar_pcl[:, 1] >= configs.lim_y[0]) & (lidar_pcl[:, 1] <= configs.lim_y[1]) &
-                    (lidar_pcl[:, 2] >= configs.lim_z[0]) & (lidar_pcl[:, 2] <= configs.lim_z[1]))
-    lidar_pcl = lidar_pcl[mask]
-
+    lidar_pcl = crop_point_cloud(lidar_pcl, configs)
     # shift level of ground plane to avoid flipping from 0 to 255 for neighboring pixels
     lidar_pcl[:, 2] = lidar_pcl[:, 2] - configs.lim_z[0]
 
@@ -92,12 +132,14 @@ def bev_from_pcl(lidar_pcl, configs):
     print("student task ID_S2_EX1")
 
     ## step 1 :  compute bev-map discretization by dividing x-range by the bev-image height (see configs)
-
+    bev_discret = (configs.lim_x[1] - configs.lim_x[0]) / configs.bev_height
+    lidar_pcl_cpy = np.copy(lidar_pcl)
+    lidar_pcl_cpy[:, 0] = np.int_(np.floor(lidar_pcl_cpy[:, 0] / bev_discret))
     ## step 2 : create a copy of the lidar pcl and transform all metrix x-coordinates into bev-image coordinates
-
+    lidar_pcl_cpy[:, 1] = np.int_(np.floor(lidar_pcl_cpy[:, 1] / bev_discret) + (configs.bev_width + 1) / 2)
     # step 3 : perform the same operation as in step 2 for the y-coordinates but make sure that no negative bev-coordinates occur
 
-    # step 4 : visualize point-cloud using the function show_pcl from a previous task
+     # step 4 : visualize point-cloud using the function show_pcl from a previous task
 
     #######
     ####### ID_S2_EX1 END #######
