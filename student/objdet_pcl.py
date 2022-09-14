@@ -13,7 +13,7 @@
 import cv2
 import numpy as np
 import torch
-
+import open3d
 # add project directory to python path to enable relative imports
 import os
 import sys
@@ -47,13 +47,13 @@ def show_pcl(pcl):
     # step 2 : create instance of open3d point-cloud class
     pcd = open3d.geometry.PointCloud()
     # step 3 : set points in pcd instance by converting the point-cloud into 3d vectors (using open3d function Vector3dVector)
+    # Remove intensity channel
+    pcl = pcl[:,:-1]
     pcd.points = open3d.utility.Vector3dVector(pcl)
     # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
-    vis.add_geometry(pcd)
+    #vis.add_geometry(pcd)
     # step 5 : visualize point cloud and keep window open until right-arrow is pressed (key-code 262)
-
-    #######
-    ####### ID_S1_EX2 END #######
+    open3d.visualization.draw_geometries([pcd])
 
 def crop_channel_azimuth(img_channel, division_factor):
     opening_angle = int(img_channel.shape[1] / division_factor)
@@ -61,7 +61,7 @@ def crop_channel_azimuth(img_channel, division_factor):
     img_channel = img_channel[:, img_channel_center - opening_angle : img_channel_center + opening_angle]
     return img_channel
 
-# visualize range image
+
 def load_range_image(frame, lidar_name):
     # get laser data structure from frame
     lidar = [obj for obj in frame.lasers if obj.name == lidar_name][0]
@@ -93,12 +93,10 @@ def get_selected_channel(frame, lidar_name, channel):
     range_image[range_image<0] = 0.0
 
     img_selected = map_to_8bit(range_image, channel = channel.value)
-    img_selected = crop_channel_azimuth(img_selected, division_factor=8)
+    #img_selected = crop_channel_azimuth(img_selected, division_factor=8)
     return img_selected
 
 def show_range_image(frame, lidar_name):
-
-    ####### ID_S1_EX1 START #######
     print("student task ID_S1_EX1")
     img_channel_range = get_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL_CHANNELS.RANGE)
     img_channel_intensity = get_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL_CHANNELS.INTENSITY)

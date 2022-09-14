@@ -137,8 +137,9 @@ def range_image_to_point_cloud(frame, lidar_name, vis=True):
         open3d.visualization.draw_geometries([pcd])
 
     # stack lidar point intensity as last column
+    print(pcl.shape)
     pcl_full = np.column_stack((pcl, range_image[idx_range, 1]))
-
+    print(pcl_full.shape)
     return pcl_full
 
 def crop_point_cloud(lidar_pcl, config):
