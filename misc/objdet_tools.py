@@ -192,8 +192,6 @@ def pcl_from_range_image(frame, lidar_name):
     return points_all
 
 
-
-
 ##################
 # BIRDS-EYE VIEW
 

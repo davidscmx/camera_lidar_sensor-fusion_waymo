@@ -96,7 +96,7 @@ np.random.seed(10) # make random values predictable
 # options are 'bev_from_pcl', 'detect_objects', 'validate_object_labels',
 # 'measure_detection_performance'; options not in the list will be loaded from file
 exec_detection = [
-    #"bev_from_pcl"
+    "bev_from_pcl"
     ]
 # options are 'perform_tracking'
 exec_tracking = [
@@ -107,9 +107,9 @@ exec_tracking = [
 # 'show_objects_in_bev_labels_in_camera', 'show_tracks', 'show_detection_performance', 'make_tracking_movie'
 exec_visualization = [
     #"show_camera_image",
-    #"pcl_from_rangeimage",
-    "show_pcl",
-    "show_range_image"
+    "pcl_from_rangeimage",
+    #"show_pcl",
+    #"show_range_image"
     ]
 # set pause time between frames in ms (0 = stop between frames until key is pressed)
 exec_list = make_exec_list(exec_detection, exec_tracking, exec_visualization)

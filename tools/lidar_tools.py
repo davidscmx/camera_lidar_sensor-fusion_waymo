@@ -181,7 +181,8 @@ def pcl_to_bev(lidar_pcl, configs, vis=True):
     # assign the height value of each unique entry in lidar_top_pcl to the height map and
     # make sure that each entry is normalized on the difference between the upper and lower height defined in the config file
     height_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
-    height_map[np.int_(lidar_pcl_hei[:, 0]), np.int_(lidar_pcl_hei[:, 1])] = lidar_pcl_hei[:, 2] / float(np.abs(configs.lim_z[1] - configs.lim_z[0]))
+    height_map[np.int_(lidar_pcl_hei[:, 0]), np.int_(lidar_pcl_hei[:, 1])] = \
+        lidar_pcl_hei[:, 2] / float(np.abs(configs.lim_z[1] - configs.lim_z[0]))
 
     # sort points such that in case of identical BEV grid coordinates, the points in each grid cell are arranged based on their intensity
     lidar_pcl_cpy[lidar_pcl_cpy[:,3]>1.0,3] = 1.0
@@ -194,7 +195,8 @@ def pcl_to_bev(lidar_pcl, configs, vis=True):
 
     # create the intensity map
     intensity_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
-    intensity_map[np.int_(lidar_pcl_int[:, 0]), np.int_(lidar_pcl_int[:, 1])] = lidar_pcl_int[:, 3] / (np.amax(lidar_pcl_int[:, 3])-np.amin(lidar_pcl_int[:, 3]))
+    intensity_map[np.int_(lidar_pcl_int[:, 0]), np.int_(lidar_pcl_int[:, 1])] = \
+        lidar_pcl_int[:, 3] / (np.amax(lidar_pcl_int[:, 3])-np.amin(lidar_pcl_int[:, 3]))
 
     # visualize intensity map
     if vis:
