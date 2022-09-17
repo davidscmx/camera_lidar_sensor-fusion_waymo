@@ -7,10 +7,8 @@ import zlib
 ## Waymo open dataset reader
 from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2
 
-def display_image(frame):
+def display_image(frame, camera_name):
     # load the camera data structure
-    camera_name = dataset_pb2.CameraName.FRONT_LEFT
-
     image = [obj for obj in frame.images if obj.name == camera_name][0]
 
     # convert the actual image into rgb format

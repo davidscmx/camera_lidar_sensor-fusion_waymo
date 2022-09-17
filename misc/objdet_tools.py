@@ -30,8 +30,6 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 from tools.waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
 from tools.waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileReader, dataset_pb2, label_pb2
 
-
-
 ##################
 # LIDAR
 
@@ -46,7 +44,6 @@ def compute_beam_inclinations(calibration, height):
 
         return np.linspace(inclination_min, inclination_max, height)
 
-
 def compute_range_image_polar(range_image, extrinsic, inclination):
     """ Convert a range image to polar coordinates. """
 
@@ -60,7 +57,6 @@ def compute_range_image_polar(range_image, extrinsic, inclination):
     inclination_tiled = np.broadcast_to(inclination[:,np.newaxis],(height,width))
 
     return np.stack((azimuth_tiled,inclination_tiled,range_image))
-
 
 def compute_range_image_cartesian(range_image_polar, extrinsic, pixel_pose, frame_pose):
     """ Convert polar coordinates to cartesian coordinates. """
@@ -227,11 +223,14 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
         bev_corners[3, 1] = y + w / 2 * sin_yaw + l / 2 * cos_yaw
 
         # draw object as box
+        print(bev_corners, "before as int")
         corners_int = bev_corners.reshape(-1, 1, 2).astype(int)
+        print("after as int", corners_int)
         cv2.polylines(bev_map, [corners_int], True, color, 2)
 
         # draw colored line to identify object front
-        corners_int = bev_corners.reshape(-1, 2)
+        corners_int = corners_int.reshape(-1, 2)
+        print(corners_int)
         cv2.line(bev_map, (corners_int[0, 0], corners_int[0, 1]), (corners_int[3, 0], corners_int[3, 1]), (255, 255, 0), 2)
 
 

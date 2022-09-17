@@ -63,7 +63,7 @@ import misc.params as params
 data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord' # Sequence 1
 # data_filename = 'training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 # data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
-show_only_frames = [0, 1] # show only frames in interval for debugging
+show_only_frames = [50, 51] # show only frames in interval for debugging
 
 ## Prepare Waymo Open Dataset file for loading
 # adjustable path in case this script is called from another working directory
@@ -78,7 +78,7 @@ configs_det = det.load_configs(model_name='darknet')
 #model_det = det.create_model(configs_det)
 
 # True = use groundtruth labels as objects, False = use model-based detection
-configs_det.use_labels_as_objects = True
+configs_det.use_labels_as_objects = False
 configs_det.save_results = False
 
 ## Uncomment this setting to restrict the y-range in the final project
@@ -90,7 +90,7 @@ association = Association() # init data association
 manager = Trackmanagement() # init track manager
 lidar = None # init lidar sensor object
 camera = None # init camera sensor object
-np.random.seed(10) # make random values predictable
+np.random.seed(10) # make random values pre dictable
 
 ## Selective execution and visualization
 # options are 'bev_from_pcl', 'detect_objects', 'validate_object_labels',
@@ -102,12 +102,16 @@ exec_detection = [
 exec_tracking = [
     #"show_objects_and_labels_in_bev"
 ]
+
 # options are:
 # 'show_range_image', 'show_bev', 'show_pcl', 'show_labels_in_image', 'show_objects_and_labels_in_bev',
 # 'show_objects_in_bev_labels_in_camera', 'show_tracks', 'show_detection_performance', 'make_tracking_movie'
 exec_visualization = [
     #"show_camera_image",
+    #"show_labels_in_image",
     "pcl_from_rangeimage",
+    "show_objects_and_labels_in_bev",
+    "show_bev"
     #"show_pcl",
     #"show_range_image"
     ]
@@ -159,7 +163,7 @@ while True:
 
         if 'show_camera_image' in exec_list:
             image = tools.extract_front_camera_image(frame)
-            camera_tools.display_image(frame)
+            camera_tools.display_image(frame, camera_name)
 
         ## Compute lidar point-cloud from range image
         if 'pcl_from_rangeimage' in exec_list:
@@ -223,7 +227,6 @@ while True:
             cv2.waitKey(vis_pause_time)
 
         if 'show_pcl' in exec_list:
-
             pcl.show_pcl(lidar_pcl)
 
         if 'show_bev' in exec_list:
