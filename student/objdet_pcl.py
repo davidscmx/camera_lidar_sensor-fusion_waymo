@@ -168,6 +168,7 @@ def bev_from_pcl(lidar_pcl, configs):
     ####### ID_S2_EX3 START #######
     print("student task ID_S2_EX3")
     height_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
+
     idx_height = np.lexsort((-lidar_pcl_cpy[:, 2], lidar_pcl_cpy[:, 1], lidar_pcl_cpy[:, 0]))
     lidar_pcl_top = lidar_pcl_cpy[idx_height] # this has the highest point for each x, y coordinate
     _, idx_height_unique = np.unique(lidar_pcl_top[:, 0:2], axis=0, return_index=True)
