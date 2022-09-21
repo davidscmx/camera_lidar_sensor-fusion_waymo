@@ -75,7 +75,7 @@ datafile_iter = iter(datafile)  # initialize dataset iterator
 ## Initialize object detection
 # options are 'darknet', 'fpn_resnet'
 configs_det = det.load_configs(model_name='darknet')
-#model_det = det.create_model(configs_det)
+model_det = det.create_model(configs_det)
 
 # True = use groundtruth labels as objects, False = use model-based detection
 configs_det.use_labels_as_objects = False
@@ -96,7 +96,8 @@ np.random.seed(10) # make random values pre dictable
 # options are 'bev_from_pcl', 'detect_objects', 'validate_object_labels',
 # 'measure_detection_performance'; options not in the list will be loaded from file
 exec_detection = [
-    "bev_from_pcl"
+    "bev_from_pcl",
+    "detect_objects"
     ]
 # options are 'perform_tracking'
 exec_tracking = [
@@ -189,6 +190,7 @@ while True:
             if 'detect_objects' in exec_list:
                 print('detecting objects in lidar pointcloud')
                 detections = det.detect_objects(lidar_bev, model_det, configs_det)
+                print("detections, ", len(detections))
             else:
                 print('loading detected objects from result file')
                 # load different data for final project vs. mid-term project

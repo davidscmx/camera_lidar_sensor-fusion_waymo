@@ -150,6 +150,7 @@ def detect_objects(input_bev_maps, model, configs):
         if 'darknet' in configs.arch:
 
             # perform post-processing
+            print(configs.conf_thresh, configs.nms_thresh)
             output_post = post_processing_v2(outputs, conf_thresh=configs.conf_thresh, nms_thresh=configs.nms_thresh)
             detections = []
             for sample_i in range(len(output_post)):

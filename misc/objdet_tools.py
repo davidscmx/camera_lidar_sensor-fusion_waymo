@@ -223,14 +223,11 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
         bev_corners[3, 1] = y + w / 2 * sin_yaw + l / 2 * cos_yaw
 
         # draw object as box
-        print(bev_corners, "before as int")
         corners_int = bev_corners.reshape(-1, 1, 2).astype(int)
-        print("after as int", corners_int)
         cv2.polylines(bev_map, [corners_int], True, color, 2)
 
         # draw colored line to identify object front
         corners_int = corners_int.reshape(-1, 2)
-        print(corners_int)
         cv2.line(bev_map, (corners_int[0, 0], corners_int[0, 1]), (corners_int[3, 0], corners_int[3, 1]), (255, 255, 0), 2)
 
 

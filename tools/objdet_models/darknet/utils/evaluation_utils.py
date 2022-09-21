@@ -28,7 +28,7 @@ def get_corners(x, y, w, l, yaw):
     bev_corners[3, 1] = y + w / 2 * sin_yaw + l / 2 * cos_yaw
 
     return bev_corners
-    
+
 
 def cvt_box_2_polygon(box):
     """
@@ -347,8 +347,10 @@ def post_processing_v2(prediction, conf_thresh=0.95, nms_thresh=0.4):
     output = [None for _ in range(len(prediction))]
     for image_i, image_pred in enumerate(prediction):
         # Filter out confidence scores below threshold
+        print("image_pred", image_pred[:, 6])
         image_pred = image_pred[image_pred[:, 6] >= conf_thresh]
         # If none are remaining => process next image
+
         if not image_pred.size(0):
             continue
         # Object confidence times class confidence
