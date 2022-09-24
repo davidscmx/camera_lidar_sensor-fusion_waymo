@@ -31,11 +31,17 @@ from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2, lab
 # object detection tools and helper functions
 import misc.objdet_tools as tools
 
-class RANGE_IMAGE_CELL_CHANNELS(Enum):
-    RANGE = 0
-    INTENSITY = 1
-    ELONGATION = 2
-    IS_IN_NO_LABEL_ZONE = 3
+class RangeImgChannel(Enum):
+    Range = 0
+    Intensity = 1
+    Elongation = 2
+    Is_in_no_label_zone = 3
+
+#class
+# 0 x
+# 1 y
+# 2 height
+# 3 intensity
 
 def show_pcl(pcl):
     print("student task ID_S1_EX2")
@@ -47,6 +53,14 @@ def show_pcl(pcl):
     pcd.points = open3d.utility.Vector3dVector(pcl)
     open3d.visualization.draw_geometries([pcd])
 
+def draw_1D_map(custom_map, name):
+    custom_map = custom_map * 256
+    custom_map = custom_map.astype(np.uint8)
+    while (1):
+        cv2.imshow(name, custom_map)
+        if cv2.waitKey(10) & 0xFF == 27:
+            break
+    cv2.destroyAllWindows()
 
 def crop_channel_azimuth(img_channel, division_factor):
     opening_angle = int(img_channel.shape[1] / division_factor)
@@ -73,9 +87,10 @@ def contrast_adjustment(img):
 def map_to_8bit(range_image, channel):
     img_channel = range_image[:,:,channel]
 
-    if channel == RANGE_IMAGE_CELL_CHANNELS.RANGE.value:
+    if channel == RangeImgChannel.Range.value:
         img_channel = img_channel * 255 / (np.amax(img_channel) - np.amin(img_channel))
-    elif channel == RANGE_IMAGE_CELL_CHANNELS.INTENSITY.value:
+
+    elif channel == RangeImgChannel.Intensity.value:
         img_channel = contrast_adjustment(img_channel)
 
     img_channel = img_channel.astype(np.uint8)
@@ -116,61 +131,59 @@ def discretize_for_bev(lidar_pcl, configs):
     lidar_pcl_cpy = np.copy(lidar_pcl)
     # remove lidar points outside detection area and with too low reflectivity
     lidar_pcl_cpy = crop_point_cloud(lidar_pcl_cpy, configs)
-    ## step 2 : create a copy of the lidar pcl and transform all metrix x-coordinates into bev-image coordinates
+
     lidar_pcl_cpy[:, 0] = np.int_(np.floor(lidar_pcl_cpy[:, 0] / bev_discret))
-    # step 3 : perform the same operation as in step 2 for the y-coordinates but make sure that no negative bev-coordinates occur
+    # Make sure that no negative bev-coordinates occur by adding half of the width
     lidar_pcl_cpy[:, 1] = np.int_(np.floor(lidar_pcl_cpy[:, 1] / bev_discret) + (configs.bev_width + 1) / 2)
-     # step 4 : visualize point-cloud using the function show_pcl from a previous task
     lidar_pcl_cpy[:, 2] = lidar_pcl_cpy[:, 2] - configs.lim_z[0]
 
     return lidar_pcl_cpy
 
-def draw_1D_map(custom_map, name):
-    custom_map = custom_map * 256
-    custom_map = custom_map.astype(np.uint8)
-    while (1):
-        cv2.imshow(name, custom_map)
-        if cv2.waitKey(10) & 0xFF == 27:
-            break
-    cv2.destroyAllWindows()
+def get_sorted_lidar_pcl_according_to_dim(lidar_pcl_cpy, configs, dim2sort = None):
+    lidar_pcl_cpy[lidar_pcl_cpy[:, 3] > 1.0, 3] = 1.0
+    indices = np.lexsort((-lidar_pcl_cpy[:, dim2sort], lidar_pcl_cpy[:, 1], lidar_pcl_cpy[:, 0]))
 
-def get_intensity_map_from_pcl(lidar_pcl, configs):
-    lidar_pcl_cpy[lidar_pcl_cpy[:,3]>1.0, 3] = 1.0
+    lidar_pcl_cpy = lidar_pcl_cpy[indices]
+    _, indices = np.unique(lidar_pcl_cpy[:, 0:2], axis=0, return_index=True)
+    lidar_top_sorted = lidar_pcl_cpy[indices]
 
-    idx_intensity = np.lexsort((-lidar_pcl_cpy[:, 3], lidar_pcl_cpy[:, 1], lidar_pcl_cpy[:, 0]))
-    lidar_pcl_cpy = lidar_pcl_cpy[idx_intensity]
+    return lidar_top_sorted
 
-    _, indices, count = np.unique(lidar_pcl_cpy[:, 0:2], axis=0, return_index=True, return_counts=True)
-    lidar_pcl_int = lidar_pcl_cpy[indices]
-
+def get_intensity_map_from_pcl(lidar_pcl_cpy, configs):
     intensity_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
+
+    lidar_pcl_int = get_sorted_lidar_pcl_according_to_dim(lidar_pcl_cpy, configs, dim2sort = 3)
+
     intensity_map[np.int_(lidar_pcl_int[:, 0]), np.int_(lidar_pcl_int[:, 1])] = \
         lidar_pcl_int[:, 3] / (np.amax(lidar_pcl_int[:, 3]) - np.amin(lidar_pcl_int[:, 3]))
 
+    return intensity_map
 
-def get_height_map_from_pcl(lidar_pcl, configs):
+
+def get_height_map_from_pcl(lidar_pcl_cpy, configs):
+
+    lidar_pcl_height = get_sorted_lidar_pcl_according_to_dim(lidar_pcl_cpy, configs, dim2sort = 2)
+
     height_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
 
-    idx_height = np.lexsort((-lidar_pcl_cpy[:, 2], lidar_pcl_cpy[:, 1], lidar_pcl_cpy[:, 0]))
-    lidar_pcl_top = lidar_pcl_cpy[idx_height] # this has the highest point for each x, y coordinate
-    _, idx_height_unique = np.unique(lidar_pcl_top[:, 0:2], axis=0, return_index=True)
-    lidar_pcl_top = lidar_pcl_top[idx_height_unique]
+    height_map[np.int_(lidar_pcl_height[:, 0]), np.int_(lidar_pcl_height[:, 1])] = \
+        lidar_pcl_height[:, 2] / float(np.abs(configs.lim_z[1] - configs.lim_z[0]))
 
-    height_map[np.int_(lidar_pcl_top[:, 0]), np.int_(lidar_pcl_top[:, 1])] = \
-        lidar_pcl_top[:, 2] / float(np.abs(configs.lim_z[1] - configs.lim_z[0]))
+    return height_map
 
-
-def get_density_map_from_pcl(lidar_pcl, configs):
+def get_density_map_from_pcl(lidar_pcl_cpy, configs):
     # Compute density layer of the BEV map
     density_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
     _, _, counts = np.unique(lidar_pcl_cpy[:, 0:2], axis=0, return_index=True, return_counts=True)
     normalizedCounts = np.minimum(1.0, np.log(counts + 1) / np.log(64))
+
+    lidar_pcl_top = get_sorted_lidar_pcl_according_to_dim(lidar_pcl_cpy, configs, dim2sort = 2)
     density_map[np.int_(lidar_pcl_top[:, 0]), np.int_(lidar_pcl_top[:, 1])] = normalizedCounts
 
     return density_map
 
 
-def assemble_bev_from_maps(density_map, intensity_map, height_map):
+def assemble_bev_from_maps(density_map, intensity_map, height_map, configs):
     # assemble 3-channel bev-map from individual maps
     bev_map = np.zeros((3, configs.bev_height, configs.bev_width))
     bev_map[2, :, :] = density_map[:configs.bev_height, :configs.bev_width]  # r_map
@@ -204,10 +217,10 @@ def bev_from_pcl(lidar_pcl, configs, vis=False):
     if vis:
         draw_1D_map(height_map, "height_map")
     ####### ID_S2_EX3 END #######
-    density_map = get_density_map_from_pcl(lidar_pcl, configs):
+    density_map = get_density_map_from_pcl(lidar_pcl_cpy, configs)
 
     # Assemble BEV from maps
-    input_bev_maps = assemble_bev_from_maps(density_map, intensity_map, height_map)
+    input_bev_maps = assemble_bev_from_maps(density_map, intensity_map, height_map, configs)
 
     return input_bev_maps
 
