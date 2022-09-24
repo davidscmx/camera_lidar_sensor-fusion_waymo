@@ -37,23 +37,16 @@ class RANGE_IMAGE_CELL_CHANNELS(Enum):
     ELONGATION = 2
     IS_IN_NO_LABEL_ZONE = 3
 
-# visualize lidar point-cloud
 def show_pcl(pcl):
-
     print("student task ID_S1_EX2")
-    # step 1 : initialize open3d with key callback and create window
     vis = open3d.visualization.VisualizerWithKeyCallback()
     vis.create_window()
-    # step 2 : create instance of open3d point-cloud class
     pcd = open3d.geometry.PointCloud()
-    # step 3 : set points in pcd instance by converting the point-cloud into 3d vectors (using open3d function Vector3dVector)
     # Remove intensity channel
     pcl = pcl[:,:-1]
     pcd.points = open3d.utility.Vector3dVector(pcl)
-    # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
-    #vis.add_geometry(pcd)
-    # step 5 : visualize point cloud and keep window open until right-arrow is pressed (key-code 262)
     open3d.visualization.draw_geometries([pcd])
+
 
 def crop_channel_azimuth(img_channel, division_factor):
     opening_angle = int(img_channel.shape[1] / division_factor)
@@ -141,13 +134,7 @@ def draw_1D_map(custom_map, name):
             break
     cv2.destroyAllWindows()
 
-def bev_from_pcl(lidar_pcl, configs):
-    ####### ID_S2_EX1 START #######
-    print("student task ID_S2_EX1")
-    lidar_pcl_cpy = discretize_for_bev(lidar_pcl, configs)
-    ####### ID_S2_EX1 END #######
-    ####### ID_S2_EX2 START #######
-    print("student task ID_S2_EX2")
+def get_intensity_map_from_pcl(lidar_pcl, configs):
     lidar_pcl_cpy[lidar_pcl_cpy[:,3]>1.0, 3] = 1.0
 
     idx_intensity = np.lexsort((-lidar_pcl_cpy[:, 3], lidar_pcl_cpy[:, 1], lidar_pcl_cpy[:, 0]))
@@ -160,13 +147,8 @@ def bev_from_pcl(lidar_pcl, configs):
     intensity_map[np.int_(lidar_pcl_int[:, 0]), np.int_(lidar_pcl_int[:, 1])] = \
         lidar_pcl_int[:, 3] / (np.amax(lidar_pcl_int[:, 3]) - np.amin(lidar_pcl_int[:, 3]))
 
-    img_intensity = intensity_map * 256
-    img_intensity = img_intensity.astype(np.uint8)
 
-    #draw_1D_map(intensity_map, "intensity_map")
-    ####### ID_S2_EX2 END #######
-    ####### ID_S2_EX3 START #######
-    print("student task ID_S2_EX3")
+def get_height_map_from_pcl(lidar_pcl, configs):
     height_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
 
     idx_height = np.lexsort((-lidar_pcl_cpy[:, 2], lidar_pcl_cpy[:, 1], lidar_pcl_cpy[:, 0]))
@@ -177,15 +159,18 @@ def bev_from_pcl(lidar_pcl, configs):
     height_map[np.int_(lidar_pcl_top[:, 0]), np.int_(lidar_pcl_top[:, 1])] = \
         lidar_pcl_top[:, 2] / float(np.abs(configs.lim_z[1] - configs.lim_z[0]))
 
-    #draw_1D_map(height_map, "height_map")
-    ####### ID_S2_EX3 END #######
 
+def get_density_map_from_pcl(lidar_pcl, configs):
     # Compute density layer of the BEV map
     density_map = np.zeros((configs.bev_height + 1, configs.bev_width + 1))
     _, _, counts = np.unique(lidar_pcl_cpy[:, 0:2], axis=0, return_index=True, return_counts=True)
     normalizedCounts = np.minimum(1.0, np.log(counts + 1) / np.log(64))
     density_map[np.int_(lidar_pcl_top[:, 0]), np.int_(lidar_pcl_top[:, 1])] = normalizedCounts
 
+    return density_map
+
+
+def assemble_bev_from_maps(density_map, intensity_map, height_map):
     # assemble 3-channel bev-map from individual maps
     bev_map = np.zeros((3, configs.bev_height, configs.bev_width))
     bev_map[2, :, :] = density_map[:configs.bev_height, :configs.bev_width]  # r_map
@@ -199,6 +184,31 @@ def bev_from_pcl(lidar_pcl, configs):
 
     bev_maps = torch.from_numpy(bev_maps)  # create tensor from birds-eye view
     input_bev_maps = bev_maps.to(configs.device, non_blocking=True).float()
+
+    return input_bev_maps
+
+def bev_from_pcl(lidar_pcl, configs, vis=False):
+    ####### ID_S2_EX1 START #######
+    print("student task ID_S2_EX1")
+    lidar_pcl_cpy = discretize_for_bev(lidar_pcl, configs)
+    ####### ID_S2_EX1 END #######
+    ####### ID_S2_EX2 START #######
+    print("student task ID_S2_EX2")
+    intensity_map = get_intensity_map_from_pcl(lidar_pcl_cpy, configs)
+    if vis:
+        draw_1D_map(intensity_map, "intensity_map")
+    ####### ID_S2_EX2 END #######
+    ####### ID_S2_EX3 START #######
+    print("student task ID_S2_EX3")
+    height_map = get_height_map_from_pcl(lidar_pcl_cpy, configs)
+    if vis:
+        draw_1D_map(height_map, "height_map")
+    ####### ID_S2_EX3 END #######
+    density_map = get_density_map_from_pcl(lidar_pcl, configs):
+
+    # Assemble BEV from maps
+    input_bev_maps = assemble_bev_from_maps(density_map, intensity_map, height_map)
+
     return input_bev_maps
 
 
