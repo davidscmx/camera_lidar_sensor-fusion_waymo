@@ -61,7 +61,7 @@ def load_configs_model(model_name='darknet', configs=None):
 
     elif model_name == 'fpn_resnet':
         ####### ID_S3_EX1-3 START #######
-        #######
+        # Many parts from  SFA3D/sfa/test.py
         print("student task ID_S3_EX1-3")
         configs.model_path = os.path.join(parent_path, 'tools', 'objdet_models', 'resnet')
         configs.pretrained_filename = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth')
@@ -153,6 +153,7 @@ def create_model(configs):
         ####### ID_S3_EX1-4 START #######
         #######
         print("student task ID_S3_EX1-4")
+        # From SFA3D/sfa/models/model_utils.py
         model = fpn_resnet.get_pose_net(num_layers=18, heads=configs.heads, head_conv=configs.head_conv,
                                         imagenet_pretrained=configs.imagenet_pretrained)
         #######
@@ -172,6 +173,7 @@ def create_model(configs):
 
     return model
 
+# From SFA3D/sfa/utils/torch_utils.py
 def _sigmoid(x):
     return torch.clamp(x.sigmoid_(), min=1e-4, max=1 - 1e-4)
 
@@ -216,14 +218,11 @@ def detect_objects(input_bev_maps, model, configs):
                                 outputs['z_coor'],
                                 outputs['dim'], K=configs.K)
             detections = detections.cpu().numpy().astype(np.float32)
-            # detections = post_processing(detections, configs.num_classes, configs.down_ratio, configs.peak_thresh)
             detections = post_processing(detections, configs)
             detections = detections[0][1]
 
             #######
             ####### ID_S3_EX1-5 END #######
-
-
 
     ####### ID_S3_EX2 START #######
     #######
