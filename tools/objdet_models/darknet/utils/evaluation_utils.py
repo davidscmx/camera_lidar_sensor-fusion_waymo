@@ -347,7 +347,6 @@ def post_processing_v2(prediction, conf_thresh=0.95, nms_thresh=0.4):
     output = [None for _ in range(len(prediction))]
     for image_i, image_pred in enumerate(prediction):
         # Filter out confidence scores below threshold
-        print("image_pred", image_pred[:, 6])
         image_pred = image_pred[image_pred[:, 6] >= conf_thresh]
         # If none are remaining => process next image
 
