@@ -49,16 +49,13 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
 
             label_corners = tools.compute_box_corners(lbox.center_x, lbox.center_y,
                                                       lbox.width, lbox.length, lbox.heading)
-            print("label_corners ", label_corners)
+
             ## step 2 : loop over all detected objects (done)
             for detection in detections:
                 ## step 3 : extract the four corners of the current detection
-                # Ignore height
                 class_id, x, y, z, _, w, l, yaw = detection
-                #print(class_id, x, y, z, _, w, l, yaw)
-                # Set yaw to zero
-                detection_corners = tools.compute_box_corners(x, y, w, l, 0)
-                print("Detection corners ", detection_corners)
+                detection_corners = tools.compute_box_corners(x, y, w, l, yaw)
+                #print(detection_corners)
                 ## step 4 : computer the center distance between label and detection bounding-box in x, y, and z
                 distance = np.array([lbox.center_x, lbox.center_y, lbox.center_z]) - np.array([x, y, z])
                 ## step 5 : compute the intersection over union (IOU) between label and detection bounding-box
@@ -68,11 +65,13 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
                 intersection = detecion_poly.intersection(label_poly)
                 union = detecion_poly.union(label_poly)
                 iou = intersection.area / union.area
-                #print(iou)
+
                 ## step 6 : if IOU exceeds min_iou threshold, store [iou,dist_x, dist_y, dist_z] in matches_lab_det and increase the TP count
                 if iou > min_iou:
                     dist_x, dist_y, dist_z = distance
                     matches_lab_det.append([iou,dist_x, dist_y, dist_z ])
+                    true_positives += 1
+
             #######
             ####### ID_S4_EX1 END #######
 
@@ -104,13 +103,12 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
 
     pos_negs = [all_positives, true_positives, false_negatives, false_positives]
     det_performance = [ious, center_devs, pos_negs]
-    print(det_performance)
+
     return det_performance
 
 
 # evaluate object detection performance based on all frames
 def compute_performance_stats(det_performance_all):
-    print(det_performance_all)
     ####### ID_S4_EX3 START #######
     #######
     print('student task ID_S4_EX3')
@@ -128,8 +126,6 @@ def compute_performance_stats(det_performance_all):
         pos_negs.append(item[2])
         pos_negs_arr = np.asarray(pos_negs)
 
-    print(ious)
-    print(center_devs)
     positives = sum(pos_negs_arr[:,0])
     true_positives = sum(pos_negs_arr[:,1])
     false_negatives = sum(pos_negs_arr[:,2])

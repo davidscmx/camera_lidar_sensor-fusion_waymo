@@ -17,8 +17,11 @@ import open3d
 # add project directory to python path to enable relative imports
 import os
 import sys
+import time
 from enum import Enum
 import zlib
+import matplotlib.pyplot as plt
+
 
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -43,15 +46,60 @@ class RangeImgChannel(Enum):
 # 2 height
 # 3 intensity
 
+
+vis = open3d.visualization.VisualizerWithKeyCallback()
+lidar_frame_counter = 0
 def show_pcl(pcl):
-    print("student task ID_S1_EX2")
-    vis = open3d.visualization.VisualizerWithKeyCallback()
-    vis.create_window()
+    global lidar_frame_counter
+
+    if not lidar_frame_counter:
+        vis.create_window()
+
     pcd = open3d.geometry.PointCloud()
     # Remove intensity channel
     pcl = pcl[:,:-1]
     pcd.points = open3d.utility.Vector3dVector(pcl)
     open3d.visualization.draw_geometries([pcd])
+
+    if not lidar_frame_counter:
+        vis.add_geometry(pcd)
+    else:
+        vis.clear_geometries()
+        #vis.add_geometry(pcd)
+        vis.update_geometry(pcd)
+
+    vis.poll_events()
+    vis.update_renderer()
+
+
+    #vis.capture_screen_image('cameraparams.png')
+
+    # image = vis.capture_screen_float_buffer()
+    # Close
+    time.sleep(2)
+    vis.capture_screen_image(f"./lidar_images/depth_image_{lidar_frame_counter}.png")
+
+    #image = vis.capture_screen_float_buffer()
+
+    #image = vis.capture_screen_float_buffer(False)
+    #image = np.asarray(image) * 256
+    #image = image.astype(np.uint8)
+
+    #image = cv2.resize(image,(264,264))
+    #image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
+    #print(image.shape)
+    #cv2.imwrite("test.png",image)
+    #cv2.imshow("test", image)
+    #if cv2.waitKey(10) & 0xFF == 27:
+    #    break
+    #plt.imshow(image)
+
+    #print(type(image))
+    #plt.savefig(f"./lidar_images/depth_image_{lidar_frame_counter}.png")
+    #vis.destroy_window()
+
+
+    lidar_frame_counter+=1
 
 def draw_1D_map(custom_map, name):
     custom_map = custom_map * 256
@@ -96,18 +144,19 @@ def map_to_8bit(range_image, channel):
     img_channel = img_channel.astype(np.uint8)
     return img_channel
 
-def get_selected_channel(frame, lidar_name, channel):
+def get_selected_channel(frame, lidar_name, channel, crop_azimuth=True):
     range_image = load_range_image(frame, lidar_name)
     range_image[range_image<0] = 0.0
 
     img_selected = map_to_8bit(range_image, channel = channel.value)
-    #img_selected = crop_channel_azimuth(img_selected, division_factor=8)
+    if crop_azimuth:
+        img_selected = crop_channel_azimuth(img_selected, division_factor=8)
     return img_selected
 
-def show_range_image(frame, lidar_name):
+def show_range_image(frame, lidar_name, crop_azimuth=True):
     print("student task ID_S1_EX1")
-    img_channel_range = get_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL_CHANNELS.RANGE)
-    img_channel_intensity = get_selected_channel(frame, lidar_name, RANGE_IMAGE_CELL_CHANNELS.INTENSITY)
+    img_channel_range = get_selected_channel(frame, lidar_name, RangeImgChannel.Range, crop_azimuth)
+    img_channel_intensity = get_selected_channel(frame, lidar_name, RangeImgChannel.Intensity, crop_azimuth)
     img_range_intensity = np.vstack([img_channel_range, img_channel_intensity])
     return img_range_intensity
 

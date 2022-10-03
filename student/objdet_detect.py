@@ -197,7 +197,6 @@ def detect_objects(input_bev_maps, model, configs):
                     continue
                 detection = output_post[sample_i]
                 for obj in detection:
-                    print( "Detection in obj detect ", obj)
                     x, y, w, l, im, re, _, _, _ = obj
                     yaw = np.arctan2(im, re)
                     height= 1.70
@@ -236,17 +235,17 @@ def detect_objects(input_bev_maps, model, configs):
 
         ## step 2 : loop over all detections
         for obj in detections:
-            _id, x, y, z, h, w, l, yaw = obj
+            _id, _x, _y, _z, _h, _w, _l, _yaw = obj
 
             ## step 3 : perform the conversion using the limits for x, y and z set in the configs structure
             # Note change in x<->y
-            x = y / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
+            x = _y / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
             # Note change in x<->y
-            y = x / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0]) - (configs.lim_y[1] - configs.lim_y[0]) / 2.0
-            w = w / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0])
-            l = l / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
-            z = z
-            yaw = -yaw
+            y = _x / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0]) - (configs.lim_y[1] - configs.lim_y[0]) / 2.0
+            w = _w / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0])
+            l = _l / configs.bev_height *(configs.lim_x[1] - configs.lim_x[0])
+            z = _z
+            yaw = -_yaw
 
             if ((x >= configs.lim_x[0]) and (x <= configs.lim_x[1])
                 and (y >= configs.lim_y[0]) and (y <= configs.lim_y[1])
