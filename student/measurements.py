@@ -27,7 +27,9 @@ class Sensor:
         self.name = name
         if name == 'lidar':
             self.dim_meas = 3
-            self.sensor_to_vehicle = np.matrix(np.identity((4))) # transformation sensor to vehicle coordinates equals identity matrix because lidar detections are already in vehicle coordinates
+            # transformation sensor to vehicle coordinates equals
+            # identity matrix because lidar detections are already in vehicle coordinates
+            self.sensor_to_vehicle = np.matrix(np.identity((4)))
             self.fov = [-np.pi/2, np.pi/2] # angle of field of view in radians
 
         elif name == 'camera':
@@ -47,7 +49,19 @@ class Sensor:
         # TODO Step 4: implement a function that returns True if x lies in the sensor's field of view,
         # otherwise False.
         ############
+        # check if an object x can be seen by this sensor
+        pos_veh = np.ones((4, 1)) # homogeneous coordinates
+        pos_veh[0:3] = x[0:3]
+        pos_sens = self.veh_to_sens*pos_veh # transform from vehicle to sensor coordinates
+        visible = False
+        # make sure to not divide by zero - we can exclude the whole negative x-range here
+        if pos_sens[0] > 0:
+            alpha = np.arctan2(pos_sens[1], pos_sens[0]) # calc angle between object and x-axis
+            # no normalization needed because returned alpha always lies between [-pi/2, pi/2]
+            if alpha > self.fov[0] and alpha < self.fov[1]:
+                visible = True
 
+        return visible
         return True
 
         ############
