@@ -46,7 +46,7 @@ class Sensor:
     def in_fov(self, x):
         # check if an object x can be seen by this sensor
         ############
-        # TODO Step 4: implement a function that returns True if x lies in the sensor's field of view,
+        # Step 4: implement a function that returns True if x lies in the sensor's field of view,
         # otherwise False.
         ############
         # check if an object x can be seen by this sensor
@@ -62,7 +62,7 @@ class Sensor:
                 visible = True
 
         return visible
-        return True
+        
 
         ############
         # END student code
