@@ -62,7 +62,7 @@ class Sensor:
                 visible = True
 
         return visible
-        
+
 
         ############
         # END student code
@@ -133,13 +133,6 @@ class Sensor:
             meas = Measurement(num_frame, z, self)
             meas_list.append(meas)
         return meas_list
-
-        ############
-        # END student code
-        ############
-
-
-###################
 
 class Measurement:
     '''Measurement class including measurement values, covariance, timestamp, sensor'''
