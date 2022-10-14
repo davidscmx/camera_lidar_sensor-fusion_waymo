@@ -30,8 +30,12 @@ class Filter:
     def F(self):
         # x' = x + xdot*dt
         # x_dot = x_dot
-        return np.matrix([[1,1],
-                          [0,1]])
+         return np.matrix([[1, 0, 0, dt, 0, 0],
+                           [0, 1, 0, 0, dt, 0],
+                           [0, 0, 1, 0, 0, dt],
+                           [0, 0, 0, 1, 0,  0],
+                           [0, 0, 0, 0, 1,  0],
+                           [0, 0, 0, 0, 0,  1]])
 
     @property
     def Q(self):
@@ -39,13 +43,20 @@ class Filter:
                         [0, 0]])
 
     def predict(self, track):
-        track.x = self.F @ track.x
-        track.P = self.F @ P @ self.F.transpose() + self.Q
-        return x, P
+        x = self.F @ track.x
+        P = self.F @ P @ self.F.transpose() + self.Q
+        track.set_x(x)
+        track.set_P(P)
 
     def update(self, track, meas, P):
-
-
+        H = meas.sensor.get_H()
+        gamma = self.gamma(track, meas)
+        K = track.P * H.transpose() * np.linalg.inv(S)
+        x = x + K*gamma
+        I = np.identity(params.dim_state)
+        P = (I - K*H) * P
+        track.set_x(x)
+        track.set_P(P)
         track.update_attributes(meas)
 
     def gamma(self, track, meas):

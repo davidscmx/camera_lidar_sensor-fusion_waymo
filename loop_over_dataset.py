@@ -60,10 +60,10 @@ import misc.params as params
 ## Set parameters and perform initializations
 
 ## Select Waymo Open Dataset file and frame numbers
-data_filename = = "training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord # Sequence 1
-# data_filename = 'training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
+#data_filename = = "training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord # Sequence 1
+data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 # data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
-show_only_frames = [120, 121] # show only frames in interval for debugging
+show_only_frames = [150, 200] # show only frames in interval for debugging
 
 ## Prepare Waymo Open Dataset file for loading
 # adjustable path in case this script is called from another working directory
@@ -74,7 +74,7 @@ datafile_iter = iter(datafile)  # initialize dataset iterator
 
 ## Initialize object detection
 # options are 'darknet', 'fpn_resnet'
-configs_det = det.load_configs(model_name='darknet')
+configs_det = det.load_configs(model_name='fpn_resnet')
 model_det = det.create_model(configs_det)
 
 # True = use groundtruth labels as objects, False = use model-based detection
@@ -82,7 +82,7 @@ configs_det.use_labels_as_objects = False
 configs_det.save_results = False
 
 # Uncomment this setting to restrict the y-range in the final project
-# configs_det.lim_y = [-25, 25]
+configs_det.lim_y = [-5, 10]
 
 # Initialize tracking
 KF = Filter() # set up Kalman filter
@@ -95,31 +95,27 @@ np.random.seed(10) # make random values pre dictable
 # Selective execution and visualization
 # options are 'bev_from_pcl', 'detect_objects', 'validate_object_labels',
 # 'measure_detection_performance'; options not in the list will be loaded from file
-exec_detection = ['bev_from_pcl',
-                  'detect_objects',
-                  'validate_object_labels',
-                  'measure_detection_performance'
-                  ]
+exec_detection = []
 
 # options are 'perform_tracking'
 exec_tracking = [
-    #"show_objects_and_labels_in_bev"
+    "perform_tracking"
 ]
 
 # options are:
 # 'show_range_image', 'show_bev', 'show_pcl', 'show_labels_in_image', 'show_objects_and_labels_in_bev',
  #'show_objects_in_bev_labels_in_camera', 'show_tracks', 'show_detection_performance', 'make_tracking_movie'
-
 exec_visualization = [
     #"show_detection_performance",
     #"show_labels_in_image",
-    "pcl_from_rangeimage",
-    "show_objects_and_labels_in_bev",
+    #"pcl_from_rangeimage",
+    #"show_objects_and_labels_in_bev",
     #'show_camera_image',
     #'show_objects_in_bev_labels_in_camera',
     #"show_bev"
-    "show_pcl",
+    #"show_pcl",
     #"show_range_image"
+    "show_tracks"
     ]
 
 # set pause time between frames in ms (0 = stop between frames until key is pressed)

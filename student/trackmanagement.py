@@ -38,13 +38,13 @@ class Track:
         # homogeneous coordinates
         position_sensor = np.ones((4, 1))
         position_sensor[0:3] = measurement.z[0:3]
-        position_vehicle = measurement.sensor_to_vehicle * position_sensor
+        position_vehicle = measurement.sensor.sensor_to_vehicle * position_sensor
 
         # save initial state from measurement
         self.x = np.zeros((6,1))
         self.x[0:3] = position_vehicle[0:3]
         # set up position estimation error covariance
-        P_pos = M_rot * meas.R * np.transpose(M_rot)
+        P_pos = M_rot * measurement.R * np.transpose(M_rot)
 
         # set up velocity estimation error covariance
         sigma_p44 = 50 # initial setting for estimation error covariance P entry for vx
@@ -69,12 +69,12 @@ class Track:
 
         # other track attributes
         self.id = id
-        self.width = meas.width
-        self.length = meas.length
-        self.height = meas.height
+        self.width = measurement.width
+        self.length = measurement.length
+        self.height = measurement.height
         # transform rotation from sensor to vehicle coordinates
-        self.yaw =  np.arccos(M_rot[0,0]*np.cos(meas.yaw) + M_rot[0,1]*np.sin(meas.yaw))
-        self.t = meas.t
+        self.yaw =  np.arccos(M_rot[0,0]*np.cos(measurement.yaw) + M_rot[0,1]*np.sin(measurement.yaw))
+        self.t = measurement.t
 
     def set_x(self, x):
         self.x = x
@@ -87,13 +87,13 @@ class Track:
 
     def update_attributes(self, meas):
         # use exponential sliding average to estimate dimensions and orientation
-        if meas.sensor.name == 'lidar':
+        if measurement.sensor.name == 'lidar':
             c = params.weight_dim
-            self.width = c*meas.width + (1 - c)*self.width
-            self.length = c*meas.length + (1 - c)*self.length
-            self.height = c*meas.height + (1 - c)*self.height
-            M_rot = meas.sensor.sensor_to_vehicle
-            self.yaw = np.arccos(M_rot[0,0]*np.cos(meas.yaw) + M_rot[0,1]*np.sin(meas.yaw)) # transform rotation from sensor to vehicle coordinate
+            self.width = c*measurement.width + (1 - c)*self.width
+            self.length = c*measurement.length + (1 - c)*self.length
+            self.height = c*measurement.height + (1 - c)*self.height
+            M_rot = measurement.sensor.sensor_to_vehicle
+            self.yaw = np.arccos(M_rot[0,0]*np.cos(measurement.yaw) + M_rot[0,1]*np.sin(measurement.yaw)) # transform rotation from sensor to vehicle coordinate
 
 
 class Trackmanagement:

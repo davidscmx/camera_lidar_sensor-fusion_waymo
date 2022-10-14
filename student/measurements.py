@@ -41,7 +41,7 @@ class Sensor:
             self.c_j = calib.intrinsic[3] # principal point j-coordinate
             self.fov = [-0.35, 0.35] # angle of field of view in radians, inaccurate boundary region was removed
 
-        self.veh_to_sens = np.linalg.inv(self.sensor_to_vehiclesensor_to_vehicle) # transformation vehicle to sensor coordinates
+        self.veh_to_sens = np.linalg.inv(self.sensor_to_vehicle) # transformation vehicle to sensor coordinates
 
     def in_fov(self, x):
         # check if an object x can be seen by this sensor
@@ -62,11 +62,6 @@ class Sensor:
                 visible = True
 
         return visible
-
-
-        ############
-        # END student code
-        ############
 
     def get_hx(self, x):
         # calculate nonlinear measurement expectation value h(x)
