@@ -85,7 +85,7 @@ class Track:
     def set_t(self, t):
         self.t = t
 
-    def update_attributes(self, meas):
+    def update_attributes(self, measurement):
         # use exponential sliding average to estimate dimensions and orientation
         if measurement.sensor.name == 'lidar':
             c = params.weight_dim

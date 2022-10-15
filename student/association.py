@@ -44,7 +44,7 @@ class Association:
             track = track_list[i]
             for j in range(M):
                 meas = meas_list[j]
-                dist = self.MHD(track, meas)
+                dist = self.MHD(track, meas, KF)
                 self.association_matrix[i,j] = dist
 
         self.unassigned_tracks = [] # reset lists
@@ -91,8 +91,10 @@ class Association:
             return False
 
     def MHD(self, track, meas, KF):
-        residual = meas.z - KF.H*track.x
-        MHD = residual.transpose()*np.linalg.inv(KF.S)*residual
+        H = meas.sensor.get_H(track.x)
+        S = KF.S(track, meas)
+        gamma = KF.gamma(track, meas)
+        MHD = gamma.transpose()*np.linalg.inv(S)*gamma
         return MHD
 
     def associate_and_update(self, manager, meas_list, KF):

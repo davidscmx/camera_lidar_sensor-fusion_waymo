@@ -30,17 +30,18 @@ class Filter:
     def F(self):
         # x' = x + xdot*dt
         # x_dot = x_dot
-         return np.matrix([[1, 0, 0, dt, 0, 0],
-                           [0, 1, 0, 0, dt, 0],
-                           [0, 0, 1, 0, 0, dt],
-                           [0, 0, 0, 1, 0,  0],
-                           [0, 0, 0, 0, 1,  0],
-                           [0, 0, 0, 0, 0,  1]])
+        dt = params.dt
+        return np.matrix([[1, 0, 0, dt, 0, 0],
+                          [0, 1, 0, 0, dt, 0],
+                          [0, 0, 1, 0, 0, dt],
+                          [0, 0, 0, 1, 0,  0],
+                          [0, 0, 0, 0, 1,  0],
+                          [0, 0, 0, 0, 0,  1]])
 
     @property
     def Q(self):
-        q = self.q
-        dt = self.dt
+        q = params.q
+        dt = params.dt
         q1 = ((dt**3)/3) * q
         q2 = ((dt**2)/2) * q
         q3 = dt * q
@@ -54,28 +55,32 @@ class Filter:
 
     def predict(self, track):
         x = self.F @ track.x
-        P = self.F @ P @ self.F.transpose() + self.Q
+        P = self.F @ track.P @ self.F.transpose() + self.Q
         track.set_x(x)
         track.set_P(P)
 
-    def update(self, track, meas, P):
-        H = meas.sensor.get_H()
+    def update(self, track, meas):
+        H = meas.sensor.get_H(track.x)
         gamma = self.gamma(track, meas)
+
+        S = self.S(track, meas)
         K = track.P * H.transpose() * np.linalg.inv(S)
-        x = x + K*gamma
+
+        x = track.x + K*gamma
         I = np.identity(params.dim_state)
-        P = (I - K*H) * P
+        P = (I - K*H) * track.P
+
         track.set_x(x)
         track.set_P(P)
         track.update_attributes(meas)
 
     def gamma(self, track, meas):
-        H = meas.sensor.get_H()
+        H = meas.sensor.get_H(track.x)
         gamma = meas.z - H @ track.x
         return gamma
 
     def S(self, track, meas):
-        H = meas.sensor.get_H()
+        H = meas.sensor.get_H(track.x)
         S =  H @ self.Q @ H.transpose() + meas.R
         return S
 
