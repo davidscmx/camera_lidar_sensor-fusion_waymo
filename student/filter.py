@@ -60,7 +60,7 @@ class Filter:
         track.set_P(P)
 
     def update(self, track, meas):
-        H = meas.sensor.get_H(track.x)
+        H = meas.sensor.get_hx(track.x)
         gamma = self.gamma(track, meas)
 
         S = self.S(track, meas)
@@ -75,12 +75,13 @@ class Filter:
         track.update_attributes(meas)
 
     def gamma(self, track, meas):
-        H = meas.sensor.get_H(track.x)
+        H = meas.sensor.get_hx(track.x)
         gamma = meas.z - H @ track.x
         return gamma
 
     def S(self, track, meas):
-        H = meas.sensor.get_H(track.x)
-        S =  H @ self.Q @ H.transpose() + meas.R
+        H = meas.sensor.get_hx(track.x)
+        print(H, H.shape, track.P.shape)
+        S =  H @ track.P #@ H.transpose() + meas.R
         return S
 
