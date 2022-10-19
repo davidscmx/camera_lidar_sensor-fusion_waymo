@@ -49,7 +49,7 @@ from misc.helpers import save_object_to_file, load_object_from_file, make_exec_l
 
 ## Tracking
 from student.filter import Filter
-from student.trackmanagement import Trackmanagement
+from student.trackmanagement import TrackManagement
 from student.association import Association
 from student.measurements import Sensor, Measurement
 from misc.evaluation import plot_tracks, plot_rmse, make_movie
@@ -63,7 +63,7 @@ import misc.params as params
 #data_filename = = "training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord # Sequence 1
 data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 # data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
-show_only_frames = [150, 200] # show only frames in interval for debugging
+show_only_frames = [65, 100] # show only frames in interval for debugging
 
 ## Prepare Waymo Open Dataset file for loading
 # adjustable path in case this script is called from another working directory
@@ -82,12 +82,12 @@ configs_det.use_labels_as_objects = False
 configs_det.save_results = False
 
 # Uncomment this setting to restrict the y-range in the final project
-configs_det.lim_y = [-5, 10]
+configs_det.lim_y = [-5, 15]
 
 # Initialize tracking
 KF = Filter() # set up Kalman filter
 association = Association() # init data association
-manager = Trackmanagement() # init track manager
+manager = TrackManagement() # init track manager
 lidar = None# init lidar sensor object
 camera = None # init camera sensor object
 np.random.seed(10) # make random values pre dictable
@@ -282,7 +282,7 @@ while True:
                     meas_list_cam = camera.generate_measurement(cnt_frame, z, meas_list_cam)
 
             # Kalman prediction
-            for track in manager.track_list:
+            for track in manager.tracks:
                 print('predict track', track.id)
                 KF.predict(track)
                 track.set_t((cnt_frame - 1)*0.1) # save next timestamp
@@ -295,15 +295,16 @@ while True:
 
             # save results for evaluation
             result_dict = {}
-            for track in manager.track_list:
+            for track in manager.tracks:
+                print(track.id, track)
                 result_dict[track.id] = track
-            manager.result_list.append(copy.deepcopy(result_dict))
+            manager.results.append(copy.deepcopy(result_dict))
             label_list = [frame.laser_labels, valid_label_flags]
             all_labels.append(label_list)
 
             # visualization
             if 'show_tracks' in exec_list:
-                fig, ax, ax2 = plot_tracks(fig, ax, ax2, manager.track_list, meas_list_lidar, frame.laser_labels,
+                fig, ax, ax2 = plot_tracks(fig, ax, ax2, manager.tracks, meas_list_lidar, frame.laser_labels,
                                         valid_label_flags, image, camera, configs_det)
                 if 'make_tracking_movie' in exec_list:
                     # save track plots to file
@@ -328,6 +329,7 @@ if 'show_detection_performance' in exec_list:
 
 ## Plot RMSE for all tracks
 if 'show_tracks' in exec_list:
+    print(manager.results)
     plot_rmse(manager, all_labels, configs_det)
 
 ## Make movie from tracking results

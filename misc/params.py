@@ -8,7 +8,6 @@
 #
 # https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013
 # ----------------------------------------------------------------------
-#
 
 # general parameters
 dim_state = 6 # process model dimension
@@ -31,8 +30,8 @@ weight_dim = 0.1 # sliding average parameter for dimension estimation
 gating_threshold = 0.995 # percentage of correct measurements that shall lie inside gate
 
 # measurement parameters (Step 4)
-sigma_lidar_x = 0.1 # measurement noise standard deviation for lidar x position   
-sigma_lidar_y = 0.1 # measurement noise standard deviation for lidar y position   
-sigma_lidar_z = 0.1 # measurement noise standard deviation for lidar z position   
+sigma_lidar_x = 0.1 # measurement noise standard deviation for lidar x position
+sigma_lidar_y = 0.1 # measurement noise standard deviation for lidar y position
+sigma_lidar_z = 0.1 # measurement noise standard deviation for lidar z position
 sigma_cam_i = 5 # measurement noise standard deviation for image i coordinate
 sigma_cam_j = 5 # measurement noise standard deviation for image j coordinate
