@@ -16,12 +16,13 @@ import matplotlib
 matplotlib.use('wxagg') # change backend so that figure maximizing works on Mac as well
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.path import Path
+from matplotlib.path import Path as matplotlibPath
 from matplotlib import colors
 from matplotlib.transforms import Affine2D
 import matplotlib.ticker as ticker
 import os
 import cv2
+from pathlib import Path
 
 # add project directory to python path to enable relative imports
 import os
@@ -31,6 +32,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from tools.waymo_reader.simple_waymo_open_dataset_reader import label_pb2
+
 
 def plot_tracks(fig, ax, ax2, track_list, meas_list, lidar_labels, lidar_labels_valid,
                       image, camera, configs_det, state=None):
@@ -124,9 +126,9 @@ def plot_tracks(fig, ax, ax2, track_list, meas_list, lidar_labels, lidar_labels_
             paths_2D = np.transpose(corners_2D[:, draw_line_indices])
             # print ( 'paths_2D', paths_2D)
 
-            codes = [Path.LINETO]*paths_2D.shape[0]
-            codes[0] = Path.MOVETO
-            path = Path(paths_2D, codes)
+            codes = [matplotlibPath.LINETO]*paths_2D.shape[0]
+            codes[0] = matplotlibPath.MOVETO
+            path = matplotlibPath(paths_2D, codes)
 
             # plot bounding box in image
             p = patches.PathPatch(
@@ -181,7 +183,7 @@ def plot_rmse(manager, all_labels, configs_det):
         time = []
 
         # loop over timesteps
-        for i, result_dict in enumerate(manager.results):
+        for i, result_dict in enumerate(manager.result_list):
             label_list = all_labels[i]
             if track_id not in result_dict:
                 continue

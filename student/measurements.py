@@ -27,41 +27,32 @@ class Sensor:
         self.name = name
         if name == 'lidar':
             self.dim_meas = 3
-            # transformation sensor to vehicle coordinates equals
-            # identity matrix because lidar detections are already in vehicle coordinates
-            self.sensor_to_vehicle = np.matrix(np.identity((4)))
+            self.sens_to_veh = np.matrix(np.identity((4))) # transformation sensor to vehicle coordinates equals identity matrix because lidar detections are already in vehicle coordinates
             self.fov = [-np.pi/2, np.pi/2] # angle of field of view in radians
 
         elif name == 'camera':
             self.dim_meas = 2
-            self.sensor_to_vehicle = np.matrix(calib.extrinsic.transform).reshape(4,4) # transformation sensor to vehicle coordinates
+            self.sens_to_veh = np.matrix(calib.extrinsic.transform).reshape(4,4) # transformation sensor to vehicle coordinates
             self.f_i = calib.intrinsic[0] # focal length i-coordinate
             self.f_j = calib.intrinsic[1] # focal length j-coordinate
             self.c_i = calib.intrinsic[2] # principal point i-coordinate
             self.c_j = calib.intrinsic[3] # principal point j-coordinate
             self.fov = [-0.35, 0.35] # angle of field of view in radians, inaccurate boundary region was removed
 
-        self.veh_to_sens = np.linalg.inv(self.sensor_to_vehicle) # transformation vehicle to sensor coordinates
+        self.veh_to_sens = np.linalg.inv(self.sens_to_veh) # transformation vehicle to sensor coordinates
 
     def in_fov(self, x):
         # check if an object x can be seen by this sensor
         ############
-        # Step 4: implement a function that returns True if x lies in the sensor's field of view,
+        # TODO Step 4: implement a function that returns True if x lies in the sensor's field of view,
         # otherwise False.
         ############
-        # check if an object x can be seen by this sensor
-        pos_veh = np.ones((4, 1)) # homogeneous coordinates
-        pos_veh[0:3] = x[0:3]
-        pos_sens = self.veh_to_sens*pos_veh # transform from vehicle to sensor coordinates
-        visible = False
-        # make sure to not divide by zero - we can exclude the whole negative x-range here
-        if pos_sens[0] > 0:
-            alpha = np.arctan2(pos_sens[1], pos_sens[0]) # calc angle between object and x-axis
-            # no normalization needed because returned alpha always lies between [-pi/2, pi/2]
-            if alpha > self.fov[0] and alpha < self.fov[1]:
-                visible = True
 
-        return visible
+        return True
+
+        ############
+        # END student code
+        ############
 
     def get_hx(self, x):
         # calculate nonlinear measurement expectation value h(x)
@@ -128,6 +119,13 @@ class Sensor:
             meas = Measurement(num_frame, z, self)
             meas_list.append(meas)
         return meas_list
+
+        ############
+        # END student code
+        ############
+
+
+###################
 
 class Measurement:
     '''Measurement class including measurement values, covariance, timestamp, sensor'''

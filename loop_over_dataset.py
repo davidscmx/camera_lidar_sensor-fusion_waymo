@@ -22,6 +22,7 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 import copy
+import subprocess
 
 from enum import Enum
 from easydict import EasyDict as edict
@@ -49,7 +50,7 @@ from misc.helpers import save_object_to_file, load_object_from_file, make_exec_l
 
 ## Tracking
 from student.filter import Filter
-from student.trackmanagement import TrackManagement
+from student.trackmanagement import Trackmanagement
 from student.association import Association
 from student.measurements import Sensor, Measurement
 from misc.evaluation import plot_tracks, plot_rmse, make_movie
@@ -87,7 +88,7 @@ configs_det.lim_y = [-5, 15]
 # Initialize tracking
 KF = Filter() # set up Kalman filter
 association = Association() # init data association
-manager = TrackManagement() # init track manager
+manager = Trackmanagement() # init track manager
 lidar = None# init lidar sensor object
 camera = None # init camera sensor object
 np.random.seed(10) # make random values pre dictable
@@ -115,7 +116,7 @@ exec_visualization = [
     #"show_bev"
     #"show_pcl",
     #"show_range_image"
-    "show_tracks"
+    #"show_tracks"
     ]
 
 # set pause time between frames in ms (0 = stop between frames until key is pressed)
@@ -282,8 +283,7 @@ while True:
                     meas_list_cam = camera.generate_measurement(cnt_frame, z, meas_list_cam)
 
             # Kalman prediction
-            for track in manager.tracks:
-                print('predict track', track.id)
+            for track in manager.track_list:
                 KF.predict(track)
                 track.set_t((cnt_frame - 1)*0.1) # save next timestamp
 
@@ -295,17 +295,18 @@ while True:
 
             # save results for evaluation
             result_dict = {}
-            for track in manager.tracks:
-                print(track.id, track)
+            for track in manager.track_list:
                 result_dict[track.id] = track
-            manager.results.append(copy.deepcopy(result_dict))
+            manager.result_list.append(copy.deepcopy(result_dict))
             label_list = [frame.laser_labels, valid_label_flags]
             all_labels.append(label_list)
 
             # visualization
             if 'show_tracks' in exec_list:
-                fig, ax, ax2 = plot_tracks(fig, ax, ax2, manager.tracks, meas_list_lidar, frame.laser_labels,
+
+                fig, ax, ax2 = plot_tracks(fig, ax, ax2, manager.track_list, meas_list_lidar, frame.laser_labels,
                                         valid_label_flags, image, camera, configs_det)
+
                 if 'make_tracking_movie' in exec_list:
                     # save track plots to file
                     fname = results_fullpath + '/tracking%03d.png' % cnt_frame
@@ -327,10 +328,41 @@ while True:
 if 'show_detection_performance' in exec_list:
     eval.compute_performance_stats(det_performance_all)
 
+def save_tracks_reference(result_list_to_save, name_of_file = "regression_files/track_reference_step2.txt"):
+    with open(name_of_file, "w") as f:
+        f.write("id, width, height, length, x[0], x[1], x[2], yaw\n")
+        for i, result_dict in enumerate(result_list_to_save):
+            for t_id, t in result_dict.items():
+                f.write(f"{t_id},")
+                f.write(f"{t.width},")
+                f.write(f"{t.height},")
+                f.write(f"{t.length},")
+                f.write(f"{t.x[0]},")
+                f.write(f"{t.x[1]},")
+                f.write(f"{t.x[2]},")
+                f.write(f"{t.yaw}\n")
+
+def compare_tracks_with_reference(result_list_to_save):
+    save_tracks_reference(result_list_to_save, name_of_file="regression_files/track_reference_tmp.txt")
+    print("Initiating regression test")
+
+    with open('regression_files/track_reference.txt', 'r') as file1:
+        with open('regression_files/track_reference_tmp.txt', 'r') as file2:
+            difference = set(file1).difference(file2)
+
+    if len(difference)>0:
+        print("Files are not equal!! Regression test failed.")
+    else:
+        print("Files are equal. Regression test passed.")
+
+    subprocess.run(["rm", "regression_files/track_reference_tmp.txt"])
+
 ## Plot RMSE for all tracks
+
+compare_tracks_with_reference(manager.result_list)
 if 'show_tracks' in exec_list:
-    print(manager.results)
     plot_rmse(manager, all_labels, configs_det)
+#    compare_tracks_with_reference(manager.result_list)
 
 ## Make movie from tracking results
 if 'make_tracking_movie' in exec_list:
