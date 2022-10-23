@@ -30,12 +30,7 @@ class Track:
         print('creating track no.', id)
         M_rot = meas.sensor.sens_to_veh[0:3, 0:3] # rotation matrix from sensor to vehicle coordinates
 
-        ############
         # TODO Step 2: initialization:
-        # - replace fixed track initialization values by initialization of x and P based on
-        # unassigned measurement transformed from sensor to vehicle coordinates
-        # - initialize track state and track score with appropriate values
-        ############
         # transform measurement to vehicle coordinates
         pos_sens = np.ones((4, 1)) # homogeneous coordinates
         pos_sens[0:3] = meas.z[0:3]
@@ -64,10 +59,6 @@ class Track:
         self.state = 'initialized'
         self.score = 1.0 / params.window
 
-        ############
-        # END student code
-        ############
-
         # other track attributes
         self.id = id
         self.width = meas.width
@@ -89,7 +80,7 @@ class Track:
         # use exponential sliding average to estimate dimensions and orientation
         if meas.sensor.name == 'lidar':
             c = params.weight_dim
-            self.width = c*meas.width + (1 - c)*self.width
+            self.width  = c*meas.width + (1 - c)*self.width
             self.length = c*meas.length + (1 - c)*self.length
             self.height = c*meas.height + (1 - c)*self.height
             M_rot = meas.sensor.sens_to_veh
@@ -106,34 +97,28 @@ class Trackmanagement:
         self.last_id = -1
         self.result_list = []
 
-    def manage_tracks(self, unassigned_tracks, unassigned_meas, meas_list):
-        ############
-        # TODO Step 2: implement track management:
-        # - decrease the track score for unassigned tracks
-        # - delete tracks if the score is too low or P is too big (check params.py for parameters that might be helpful, but
-        # feel free to define your own parameters)
-        ############
+    def set_unassigned_tracks(self, unassigned_tracks):
+        self._unassigned_tracks = unassigned_tracks
 
-        # decrease score for unassigned tracks
-        for i in unassigned_tracks:
+    def set_unassigned_measurements(self, unassigned_measurements):
+        self._unassigned_measurements = unassigned_measurements
+
+    def set_measurements(self, measurements):
+        self._measurements = measurements
+
+    def manage_tracks(self):
+        # Step 2: implement track management:
+        self._decrease_score_for_unassigned_tracks()
+        self._apply_logic_for_track_deletion()
+        self._initialize_new_track_with_unassigned_measurement()
+
+    def _decrease_score_for_unassigned_tracks(self):
+        for i in self._unassigned_tracks:
             track = self.track_list[i]
             # check visibility
-            if meas_list: # if not empty
-                if meas_list[0].sensor.in_fov(track.x):
-                    # your code goes here
-                    track.score -= 1.0 / params.window
-
-        # delete old tracks
-        self._apply_logic_for_track_deletion()
-
-        ############
-        # END student code
-        ############
-
-        # initialize new track with unassigned measurement
-        for j in unassigned_meas:
-            if meas_list[j].sensor.name == 'lidar': # only initialize with lidar measurements
-                self.init_track(meas_list[j])
+            if self._measurements:
+                if self._measurements[0].sensor.in_fov(track.x):
+                    track.score -= 1./params.window
 
     def _apply_logic_for_track_deletion(self):
         for i, track in enumerate(self.track_list):
@@ -147,6 +132,11 @@ class Trackmanagement:
             if track.state == 'initialized':
                 if track.score <= -5.0:
                     self.delete_track(track)
+
+    def _initialize_new_track_with_unassigned_measurement(self):
+        for j in self._unassigned_measurements:
+            if self._measurements[j].sensor.name == 'lidar': # only initialize with lidar measurements
+                self.init_track(self._measurements[j])
 
     def addTrackToList(self, track):
         self.track_list.append(track)
