@@ -23,7 +23,7 @@ show_only_frames = [65, 100] # show only frames in interval for debugging
 # True = use groundtruth labels as objects, False = use model-based detection
 configs_det.use_labels_as_objects = False
 configs_det.save_results = False
-
+configs_det.lim_y = [-5, 15]
 
 KF = Filter() # set up Kalman filter
 association = Association() # init data association
@@ -129,7 +129,7 @@ while True:
         print("StopIteration has been raised\n")
         break
 
-def save_tracks_reference(result_list_to_save, name_of_file = "regression_files/track_reference_step2.txt"):
+def save_tracks_reference(result_list_to_save, name_of_file = "regression_files/track_reference.txt"):
     with open(name_of_file, "w") as f:
         f.write("id, width, height, length, x[0], x[1], x[2], yaw\n")
         for i, result_dict in enumerate(result_list_to_save):
@@ -156,6 +156,6 @@ def compare_tracks_with_reference(result_list_to_save):
     else:
         print("Files are equal. Regression test passed.")
 
-    subprocess.run(["rm", "regression_files/track_reference_tmp.txt"])
+    #subprocess.run(["rm", "regression_files/track_reference_tmp.txt"])
 
 compare_tracks_with_reference(manager.result_list)

@@ -56,17 +56,27 @@ from student.measurements import Sensor, Measurement
 from misc.evaluation import plot_tracks, plot_rmse, make_movie
 import misc.params as params
 
-from config import *
+#from config import *
 
 ##################
 ## Select Waymo Open Dataset file and frame numbers
-data_filename = = "/media/ofli/Intenso/home/waymo_dataset/training/training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord" # Sequence 1
+data_filename = "/media/ofli/Intenso/home/waymo_dataset/training/training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord" # Sequence 1
 #data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 # data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
-show_only_frames = [65, 100] # show only frames in interval for debugging
+show_only_frames = [0, 200] # show only frames in interval for debugging
+
+data_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset', data_filename)
+results_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'results')
+datafile = WaymoDataFileReader(data_fullpath)
+datafile_iter = iter(datafile)  # initialize dataset iterator
+
 
 # Uncomment this setting to restrict the y-range in the final project
-configs_det.lim_y = [-5, 15]
+configs_det = det.load_configs(model_name='fpn_resnet')
+model_det = det.create_model(configs_det)
+configs_det.use_labels_as_objects = False
+configs_det.save_results = False
+configs_det.lim_y = [-25, 25]
 
 # Initialize tracking
 KF = Filter() # set up Kalman filter
@@ -99,7 +109,7 @@ exec_visualization = [
     #"show_bev"
     #"show_pcl",
     #"show_range_image"
-    #"show_tracks"
+    "show_tracks"
     ]
 
 # set pause time between frames in ms (0 = stop between frames until key is pressed)
