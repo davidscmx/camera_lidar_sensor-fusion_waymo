@@ -56,31 +56,14 @@ from student.measurements import Sensor, Measurement
 from misc.evaluation import plot_tracks, plot_rmse, make_movie
 import misc.params as params
 
+from config import *
 
 ##################
-## Set parameters and perform initializations
-
 ## Select Waymo Open Dataset file and frame numbers
-#data_filename = = "training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord # Sequence 1
-data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
+data_filename = = "/media/ofli/Intenso/home/waymo_dataset/training/training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord" # Sequence 1
+#data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 # data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
 show_only_frames = [65, 100] # show only frames in interval for debugging
-
-## Prepare Waymo Open Dataset file for loading
-# adjustable path in case this script is called from another working directory
-data_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset', data_filename)
-results_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'results')
-datafile = WaymoDataFileReader(data_fullpath)
-datafile_iter = iter(datafile)  # initialize dataset iterator
-
-## Initialize object detection
-# options are 'darknet', 'fpn_resnet'
-configs_det = det.load_configs(model_name='fpn_resnet')
-model_det = det.create_model(configs_det)
-
-# True = use groundtruth labels as objects, False = use model-based detection
-configs_det.use_labels_as_objects = False
-configs_det.save_results = False
 
 # Uncomment this setting to restrict the y-range in the final project
 configs_det.lim_y = [-5, 15]
@@ -328,41 +311,9 @@ while True:
 if 'show_detection_performance' in exec_list:
     eval.compute_performance_stats(det_performance_all)
 
-def save_tracks_reference(result_list_to_save, name_of_file = "regression_files/track_reference_step2.txt"):
-    with open(name_of_file, "w") as f:
-        f.write("id, width, height, length, x[0], x[1], x[2], yaw\n")
-        for i, result_dict in enumerate(result_list_to_save):
-            for t_id, t in result_dict.items():
-                f.write(f"{t_id},")
-                f.write(f"{t.width},")
-                f.write(f"{t.height},")
-                f.write(f"{t.length},")
-                f.write(f"{t.x[0]},")
-                f.write(f"{t.x[1]},")
-                f.write(f"{t.x[2]},")
-                f.write(f"{t.yaw}\n")
-
-def compare_tracks_with_reference(result_list_to_save):
-    save_tracks_reference(result_list_to_save, name_of_file="regression_files/track_reference_tmp.txt")
-    print("Initiating regression test")
-
-    with open('regression_files/track_reference.txt', 'r') as file1:
-        with open('regression_files/track_reference_tmp.txt', 'r') as file2:
-            difference = set(file1).difference(file2)
-
-    if len(difference)>0:
-        print("Files are not equal!! Regression test failed.")
-    else:
-        print("Files are equal. Regression test passed.")
-
-    subprocess.run(["rm", "regression_files/track_reference_tmp.txt"])
-
 ## Plot RMSE for all tracks
-
-compare_tracks_with_reference(manager.result_list)
 if 'show_tracks' in exec_list:
     plot_rmse(manager, all_labels, configs_det)
-#    compare_tracks_with_reference(manager.result_list)
 
 ## Make movie from tracking results
 if 'make_tracking_movie' in exec_list:
