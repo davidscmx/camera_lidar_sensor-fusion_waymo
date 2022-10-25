@@ -68,7 +68,7 @@ class Filter:
     def update(self, track, meas):
         H = meas.sensor.get_H(track.x)
         gamma = self.gamma(track, meas)
-        S = self.S(track, meas)
+        S = self.S(track, meas, H)
         K = (track.P * H.transpose()) * np.linalg.inv(S)
 
         x = track.x + K*gamma
@@ -84,7 +84,6 @@ class Filter:
         hx = meas.sensor.get_hx(track.x)
         return meas.z - hx
 
-    def S(self, track, meas):
-        H = meas.sensor.get_H(track.x)
+    def S(self, track, meas, H):
         return H * track.P * H.transpose() + meas.R
 

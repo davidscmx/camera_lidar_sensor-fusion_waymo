@@ -152,17 +152,8 @@ class Trackmanagement:
         self.track_list.remove(track)
 
     def handle_updated_track(self, track):
-        ############
-        # TODO Step 2: implement track management for updated tracks:
-        # - increase track score
-        # - set track state to 'tentative' or 'confirmed'
-        ############
         track.score += 1.0 / params.window
         if track.score >= params.confirmed_threshold:
             track.state = 'confirmed'
         else:
             track.state = 'tentative'
-
-        ############
-        # END student code
-        ############
