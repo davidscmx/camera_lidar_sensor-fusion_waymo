@@ -58,11 +58,10 @@ import misc.params as params
 
 #from config import *
 
-##################
 ## Select Waymo Open Dataset file and frame numbers
-data_filename = "/media/ofli/Intenso/home/waymo_dataset/training/training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord" # Sequence 1
-#data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 # data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
+#data_filename = 'training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
+data_filename = "training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord" # Sequence 1
 show_only_frames = [0, 200] # show only frames in interval for debugging
 
 data_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset', data_filename)
@@ -76,6 +75,8 @@ configs_det = det.load_configs(model_name='fpn_resnet')
 model_det = det.create_model(configs_det)
 configs_det.use_labels_as_objects = False
 configs_det.save_results = False
+
+# Step 1
 configs_det.lim_y = [-25, 25]
 
 # Initialize tracking
@@ -109,7 +110,7 @@ exec_visualization = [
     #"show_bev"
     #"show_pcl",
     #"show_range_image"
-    "show_tracks"
+    #"show_tracks"
     ]
 
 # set pause time between frames in ms (0 = stop between frames until key is pressed)
@@ -322,8 +323,8 @@ if 'show_detection_performance' in exec_list:
     eval.compute_performance_stats(det_performance_all)
 
 ## Plot RMSE for all tracks
-if 'show_tracks' in exec_list:
-    plot_rmse(manager, all_labels, configs_det)
+#if 'show_tracks' in exec_list:
+plot_rmse(manager, all_labels, configs_det)
 
 ## Make movie from tracking results
 if 'make_tracking_movie' in exec_list:

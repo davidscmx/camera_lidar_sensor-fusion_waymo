@@ -19,3 +19,22 @@ However making them work together is also difficult and requires a lot of tuning
 - Improve the data association with the Hungarian method for examples.
 - Use Twiddle to optimize the paramters
 
+### RSME Images
+
+Below the RMSE plots required for the different step are presented.
+
+#### Step 1
+
+<img src="img/step1_RMSE.png"/>
+
+#### Step 2
+
+<img src="img/step2_RMSE.png"/>
+
+#### Step 3
+
+<img src="img/step3_no_camera.png"/>
+
+#### Step 4
+
+<img src="img/step3.png"/>
