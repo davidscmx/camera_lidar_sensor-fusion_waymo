@@ -33,7 +33,7 @@ Below the RMSE plots required for the different step are presented.
 
 #### Step 3
 
-<img src="img/step3_no_camera.png"/>
+<img src="img/step3_nocamera.png"/>
 
 #### Step 4
 
