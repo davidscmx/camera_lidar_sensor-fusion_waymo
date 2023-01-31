@@ -10,7 +10,6 @@
 # ----------------------------------------------------------------------
 #
 
-# imports
 import os
 import pickle
 
@@ -28,13 +27,13 @@ def load_object_from_file(file_path, base_filename, object_name, frame_id=1):
     with open(object_filename, 'rb') as f:
         object = pickle.load(f)
         return object
-    
+
 ## Prepares an exec_list with all tasks to be executed
-def make_exec_list(exec_detection, exec_tracking, exec_visualization): 
-    
+def make_exec_list(exec_detection, exec_tracking, exec_visualization):
+
     # save all tasks in exec_list
     exec_list = exec_detection + exec_tracking + exec_visualization
-    
+
     # check if we need pcl
     if any(i in exec_list for i in ('validate_object_labels', 'bev_from_pcl')):
         exec_list.append('pcl_from_rangeimage')
@@ -42,6 +41,6 @@ def make_exec_list(exec_detection, exec_tracking, exec_visualization):
     if any(i in exec_list for i in ('show_tracks', 'show_labels_in_image', 'show_objects_in_bev_labels_in_camera')):
         exec_list.append('load_image')
     # movie does not work without show_tracks
-    if 'make_tracking_movie' in exec_list:  
-        exec_list.append('show_tracks')  
+    if 'make_tracking_movie' in exec_list:
+        exec_list.append('show_tracks')
     return exec_list

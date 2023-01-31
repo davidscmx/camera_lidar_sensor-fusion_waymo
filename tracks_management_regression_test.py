@@ -13,12 +13,12 @@ from config import *
 import copy
 
 import misc.objdet_tools as tools
-from misc.helpers import save_object_to_file, load_object_from_file, make_exec_list
+from misc.helpers import load_object_from_file
 from easydict import EasyDict as edict
 
 data_filename = '/media/ofli/Intenso/home/waymo_dataset/training/training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 # data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
-show_only_frames = [65, 100] # show only frames in interval for debugging
+
 
 # True = use groundtruth labels as objects, False = use model-based detection
 configs_det.use_labels_as_objects = False
@@ -36,7 +36,6 @@ vis_pause_time = 0
 
 ##################
 ## Perform detection & tracking over all selected frames
-cnt_frame = 0
 all_labels = []
 det_performance_all = []
 np.random.seed(0) # make random values predictable
@@ -50,17 +49,12 @@ config.bev_height = 608
 config.conf_thresh = 0.5
 config.model = 'darknet'
 
-while True:
+show_only_frames = [65, 100] # show only frames in interval for debugging
+
+for cnt_frame in range(show_only_frames[0], show_only_frames[1]):
     try:
         ## Get next frame from Waymo dataset
         frame = next(datafile_iter)
-        if cnt_frame < show_only_frames[0]:
-            cnt_frame = cnt_frame + 1
-            continue
-        elif cnt_frame > show_only_frames[1]:
-            print('reached end of selected frames')
-            break
-
         print('------------------------------')
         print('processing frame #' + str(cnt_frame))
 
@@ -120,9 +114,6 @@ while True:
         manager.result_list.append(copy.deepcopy(result_dict))
         label_list = [frame.laser_labels, valid_label_flags]
         all_labels.append(label_list)
-
-        # increment frame counter
-        cnt_frame = cnt_frame + 1
 
     except StopIteration:
         # if StopIteration is raised, break from loop

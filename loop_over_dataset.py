@@ -43,7 +43,7 @@ from tools.types import RANGE_IMAGE_CELL_CHANNELS
 ## 3d object detection
 import student.objdet_pcl as pcl
 import student.objdet_detect as det
-import student.objdet_eval as eval
+#import student.objdet_eval as eval
 
 import misc.objdet_tools as tools
 from misc.helpers import save_object_to_file, load_object_from_file, make_exec_list
@@ -53,7 +53,7 @@ from student.filter import Filter
 from student.trackmanagement import Trackmanagement
 from student.association import Association
 from student.measurements import Sensor, Measurement
-from misc.evaluation import plot_tracks, plot_rmse, make_movie
+#from misc.evaluation import plot_tracks, plot_rmse, make_movie
 import misc.params as params
 
 #from config import *
