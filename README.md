@@ -66,13 +66,14 @@ The following diagram contains an outline of the data flow and of the individual
 In order to create a local copy of the project, please click on "Code" and then "Download ZIP". Alternatively, you may of-course use GitHub Desktop or Git Bash for this purpose.
 
 ### Python
-The project has been written using Python 3.7. Please make sure that your local installation is equal or above this version.
+The project was originally written using Python 3.7. Now it is updated to Python 3.11.
 
 ### Package Requirements
 All dependencies required for the project have been listed in the file `requirements.txt`. You may either install them one-by-one using pip or you can use the following command to install them all at once:
 `pip3 install -r requirements.txt`
 
 ### Waymo Open Dataset Reader
+
 The Waymo Open Dataset Reader is a very convenient toolbox that allows you to access sequences from the Waymo Open Dataset without the need of installing all of the heavy-weight dependencies that come along with the official toolbox. The installation instructions can be found in `tools/waymo_reader/README.md`.
 
 ### Waymo Open Dataset Files
