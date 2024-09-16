@@ -27,8 +27,8 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 ## Waymo open dataset reader
-from tools.waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
-from tools.waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileReader, dataset_pb2, label_pb2
+from waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
+from waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileReader, dataset_pb2, label_pb2
 
 ##################
 # LIDAR
@@ -426,4 +426,3 @@ def project_labels_into_camera(camera_calibration, image, labels, labels_valid, 
         return img_resized
     else:
         return image
-

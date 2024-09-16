@@ -9,7 +9,7 @@ import numpy as np
 import zlib
 
 ## Waymo open dataset reader
-from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2
+from waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2
 from .types import RANGE_IMAGE_CELL_CHANNELS
 #from ..misc.objdet_tools import
 

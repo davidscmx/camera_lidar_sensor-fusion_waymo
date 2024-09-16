@@ -1,1 +1,0 @@
-simple_waymo_open_dataset_reader

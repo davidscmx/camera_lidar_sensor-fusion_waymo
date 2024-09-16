@@ -8,21 +8,20 @@
 # You should have received a copy of the Udacity license together with this program.
 #
 # https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013
-# ----------------------------------------------------------------------
 #
-
-##################
-## Imports
+#
+# Modified by:
+#   - David Sosa
+#
+# ----------------------------------------------------------------------
 
 ## general package imports
 import os
 import sys
 import numpy as np
-import math
 import cv2
 import matplotlib.pyplot as plt
 import copy
-import subprocess
 
 from enum import Enum
 from easydict import EasyDict as edict
@@ -32,8 +31,8 @@ import open3d
 sys.path.append(os.getcwd())
 
 ## Waymo open dataset reader
-from tools.waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
-from tools.waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileReader, dataset_pb2, label_pb2
+from waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
+from waymo_reader.simple_waymo_open_dataset_reader import WaymoDataFileReader, dataset_pb2, label_pb2
 
 # Tools
 from tools import lidar_tools
@@ -42,7 +41,7 @@ from tools.types import RANGE_IMAGE_CELL_CHANNELS
 
 ## 3d object detection
 import student.objdet_pcl as pcl
-import student.objdet_detect as det
+import object_detection.objdet_detect as det
 #import student.objdet_eval as eval
 
 import misc.objdet_tools as tools

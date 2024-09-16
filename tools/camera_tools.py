@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 
 from tools.loader_tools import prepare_waymo_dataset
-from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2
-from tools.waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
+from waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2
+from waymo_reader.simple_waymo_open_dataset_reader import utils as waymo_utils
 from easydict import EasyDict as edict
 
 class CameraTools:
